@@ -117,10 +117,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('UNHANDLED ERROR:', err.message, err.stack);
-  if (process.env.VERCEL) {
-    return res.status(500).json({ error: err.message, stack: err.stack.split('\n').slice(0, 5) });
-  }
+  console.error(err.stack);
   res.status(500).render('500', { title: 'Server Error' });
 });
 
