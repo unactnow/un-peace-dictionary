@@ -1,0 +1,281 @@
+<%- include('../partials/admin-head') %>
+
+<h2><%= term ? 'Edit term' : 'New term' %></h2>
+<% if (term) { %>
+<p><a href="/admin/terms/<%= term.id %>/revisions">View <%= revisions.length %> revision(s)</a></p>
+<% } %>
+
+<form method="post" action="<%= term ? '/admin/terms/' + term.id + '/edit' : '/admin/terms/new' %>" id="term-form" class="term-edit-layout">
+    <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
+
+    <div class="term-edit-form-col">
+        <div class="form-row">
+            <label for="name">Term name *</label>
+            <input type="text" id="name" name="name" required value="<%= term ? term.name : '' %>">
+        </div>
+        <div class="form-row">
+            <label for="abbreviation">Abbreviation expansion (optional)</label>
+            <input type="text" id="abbreviation" name="abbreviation" placeholder="Full phrase for abbr title" value="<%= term ? term.abbreviation : '' %>">
+        </div>
+        <div class="form-row">
+            <label for="slug">Slug (URL fragment)</label>
+            <input type="text" id="slug" name="slug" value="<%= term ? term.slug : '' %>">
+            <span class="hint">Auto-filled from name; used as <code>#pd-…</code> in the export.</span>
+        </div>
+        <div class="form-row">
+            <label for="pronunciation">Pronunciation (optional)</label>
+            <input type="text" id="pronunciation" name="pronunciation" value="<%= term ? term.pronunciation : '' %>">
+        </div>
+        <div class="form-row">
+            <label for="part_of_speech">Part of speech</label>
+            <select id="part_of_speech" name="part_of_speech">
+                <% const pos = term ? term.partOfSpeech : 'noun'; %>
+                <% ['noun','verb','adjective','abbreviation'].forEach(p => { %>
+                <option value="<%= p %>" <%= pos === p ? 'selected' : '' %>><%= p %></option>
+                <% }) %>
+            </select>
+        </div>
+        <div class="form-row">
+            <label for="lead_definition">Lead definition (markdown) *</label>
+            <textarea id="lead_definition" name="lead_definition" rows="8" required class="pd-md"><%= term ? term.leadDefinition : '' %></textarea>
+        </div>
+        <div class="form-row">
+            <label for="search_keywords">Extra search keywords</label>
+            <textarea id="search_keywords" name="search_keywords" rows="2" placeholder="comma or space separated"><%= term ? term.searchKeywords : '' %></textarea>
+        </div>
+
+        <h3>Accordion sections</h3>
+        <div id="sections-container">
+            <% sections.forEach((s, i) => { %>
+            <div class="accordion-block" data-section-index="<%= i %>">
+                <div class="form-row">
+                    <label>Section title</label>
+                    <input type="text" name="sections[<%= i %>][title]" value="<%= s.title %>">
+                </div>
+                <div class="form-row">
+                    <label>Body (markdown)</label>
+                    <textarea name="sections[<%= i %>][body]" rows="5" class="pd-md"><%= s.body %></textarea>
+                </div>
+                <button type="button" class="link-btn remove-section">Remove section</button>
+                <hr>
+            </div>
+            <% }) %>
+        </div>
+        <p><button type="button" class="btn" id="add-section">Add section</button></p>
+
+        <h3>Related terms</h3>
+        <div class="pd-related-checkboxes">
+            <% allTerms.forEach(t => { %>
+            <label class="inline-check"><input type="checkbox" name="relatedTermIds" value="<%= t.id %>" <%= relatedIdList && relatedIdList.indexOf(t.id) !== -1 ? 'checked' : '' %>> <%= t.name %></label>
+            <% }) %>
+        </div>
+        <% if (allTerms.length === 0) { %><p class="hint">Save other terms first to link them here.</p><% } %>
+
+        <h3>External links</h3>
+        <div id="links-container">
+            <% externalLinks.forEach((l, i) => { %>
+            <div class="link-block" data-link-index="<%= i %>">
+                <div class="form-row">
+                    <label>Link text</label>
+                    <input type="text" name="links[<%= i %>][text]" value="<%= l.text %>">
+                </div>
+                <div class="form-row">
+                    <label>URL</label>
+                    <input type="url" name="links[<%= i %>][url]" value="<%= l.url %>">
+                </div>
+                <button type="button" class="link-btn remove-link">Remove link</button>
+                <hr>
+            </div>
+            <% }) %>
+        </div>
+        <p><button type="button" class="btn" id="add-link">Add link</button></p>
+
+        <p><button type="submit" class="btn">Save</button></p>
+    </div>
+
+    <div class="term-edit-preview-col">
+        <h3>Live preview</h3>
+        <div class="pd-preview-wrap">
+            <div class="peace-dictionary" id="pd-preview-root"></div>
+        </div>
+    </div>
+</form>
+
+<% if (term) { %>
+<form method="post" action="/admin/terms/<%= term.id %>/delete" onsubmit="return confirm('Delete this term permanently?');" style="margin-top: 2rem;">
+    <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
+    <button type="submit" class="link-btn btn-danger">Delete term</button>
+</form>
+<% } %>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+(function () {
+  var allTerms = <%- JSON.stringify(allTerms.map(function(t) { return { id: t.id, name: t.name, slug: t.slug }; })) %>;
+  var lookup = {};
+  allTerms.forEach(function (t) { lookup[t.name.trim().toLowerCase()] = t; });
+
+  var slugTouched = <%= term ? 'true' : 'false' %>;
+  var nameEl = document.getElementById('name');
+  var slugEl = document.getElementById('slug');
+  if (nameEl && slugEl) {
+    nameEl.addEventListener('input', function () {
+      if (!slugTouched) {
+        var s = nameEl.value.toLowerCase().trim().replace(/[^\\w\\s-]/g, '').replace(/[\\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+        slugEl.value = s;
+      }
+    });
+    slugEl.addEventListener('input', function () { slugTouched = true; });
+  }
+
+  var sectionIdx = <%= sections.length %>;
+  document.getElementById('add-section').addEventListener('click', function () {
+    var c = document.getElementById('sections-container');
+    var div = document.createElement('div');
+    div.className = 'accordion-block';
+    div.innerHTML = '<div class="form-row"><label>Section title</label><input type="text" name="sections[' + sectionIdx + '][title]" value=""></div>' +
+      '<div class="form-row"><label>Body (markdown)</label><textarea name="sections[' + sectionIdx + '][body]" rows="5" class="pd-md"></textarea></div>' +
+      '<button type="button" class="link-btn remove-section">Remove section</button><hr>';
+    c.appendChild(div);
+    sectionIdx++;
+    bindRemove(div, '.remove-section', function () { div.remove(); schedulePreview(); });
+    div.querySelector('textarea').addEventListener('input', schedulePreview);
+    div.querySelector('input').addEventListener('input', schedulePreview);
+    schedulePreview();
+  });
+
+  var linkIdx = <%= externalLinks.length %>;
+  document.getElementById('add-link').addEventListener('click', function () {
+    var c = document.getElementById('links-container');
+    var div = document.createElement('div');
+    div.className = 'link-block';
+    div.innerHTML = '<div class="form-row"><label>Link text</label><input type="text" name="links[' + linkIdx + '][text]" value=""></div>' +
+      '<div class="form-row"><label>URL</label><input type="url" name="links[' + linkIdx + '][url]" value=""></div>' +
+      '<button type="button" class="link-btn remove-link">Remove link</button><hr>';
+    c.appendChild(div);
+    linkIdx++;
+    bindRemove(div, '.remove-link', function () { div.remove(); schedulePreview(); });
+    div.querySelectorAll('input').forEach(function (i) { i.addEventListener('input', schedulePreview); });
+    schedulePreview();
+  });
+
+  function bindRemove(parent, sel, fn) {
+    var btn = parent.querySelector(sel);
+    if (btn) btn.addEventListener('click', fn);
+  }
+  document.querySelectorAll('.remove-section').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.closest('.accordion-block').remove();
+      schedulePreview();
+    });
+  });
+  document.querySelectorAll('.remove-link').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.closest('.link-block').remove();
+      schedulePreview();
+    });
+  });
+
+  function wikiToMdLinks(text) {
+    if (!text) return '';
+    return text.replace(/\[\[([^\]]+)\]\]/g, function (_, raw) {
+      var t = lookup[raw.trim().toLowerCase()];
+      if (t) return '[' + t.name + '](#pd-' + t.slug + ')';
+      return raw.trim();
+    });
+  }
+
+  var previewTimer;
+  function schedulePreview() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(runPreview, 300);
+  }
+
+  function runPreview() {
+    var root = document.getElementById('pd-preview-root');
+    if (!root || typeof marked === 'undefined') return;
+    var name = (document.getElementById('name') && document.getElementById('name').value) || '';
+    var abbr = document.getElementById('abbreviation') && document.getElementById('abbreviation').value;
+    var pron = document.getElementById('pronunciation') && document.getElementById('pronunciation').value;
+    var pos = document.getElementById('part_of_speech') && document.getElementById('part_of_speech').value;
+    var lead = document.getElementById('lead_definition') && document.getElementById('lead_definition').value;
+    var html = '';
+    html += '<article class="pd-entry">';
+    html += '<h3 class="pd-entry-term">';
+    if (abbr) {
+      html += '<dfn><abbr title="' + escapeAttr(abbr) + '">' + escapeHtml(name) + '</abbr></dfn>';
+    } else {
+      html += '<dfn>' + escapeHtml(name) + '</dfn>';
+    }
+    html += '</h3>';
+    if (abbr) {
+      html += '<p class="pd-entry-meta">' + escapeHtml(abbr) + ' <span class="pd-pos">' + escapeHtml(pos || 'abbreviation') + '</span></p>';
+    } else {
+      html += '<p class="pd-entry-meta">' + (pron ? '<span aria-label="pronunciation">' + escapeHtml(pron) + '</span> ' : '') + '<span class="pd-pos">' + escapeHtml(pos || 'noun') + '</span></p>';
+    }
+    html += '<div class="pd-entry-body">';
+    html += marked.parse(wikiToMdLinks(lead || ''));
+    document.querySelectorAll('#sections-container .accordion-block').forEach(function (block) {
+      var titleIn = block.querySelector('input[type="text"]');
+      var ta = block.querySelector('textarea');
+      var title = titleIn ? titleIn.value.trim() : '';
+      var body = ta ? ta.value : '';
+      if (!title && !body) return;
+      html += '<details><summary>' + escapeHtml(title || 'Section') + '</summary><div class="pd-details-body">' + marked.parse(wikiToMdLinks(body)) + '</div></details>';
+    });
+    var related = [];
+    document.querySelectorAll('input[name="relatedTermIds"]:checked').forEach(function (cb) {
+      var id = cb.value;
+      var t = allTerms.find(function (x) { return x.id === id; });
+      if (t) related.push(t);
+    });
+    if (related.length) {
+      html += '<details open><summary>Related terms</summary><div class="pd-details-body"><div class="pd-related-terms">';
+      related.forEach(function (t) {
+        html += '<a href="#pd-' + escapeHtml(t.slug) + '">' + escapeHtml(t.name) + '</a>';
+      });
+      html += '</div></div></details>';
+    }
+    var extLinks = [];
+    document.querySelectorAll('#links-container .link-block').forEach(function (block) {
+      var inputs = block.querySelectorAll('input');
+      var text = inputs[0] && inputs[0].value.trim();
+      var url = inputs[1] && inputs[1].value.trim();
+      if (text && url) extLinks.push({ text: text, url: url });
+    });
+    if (extLinks.length) {
+      html += '<details><summary>Learn more</summary><div class="pd-details-body pd-learn-more"><ul>';
+      extLinks.forEach(function (l) {
+        html += '<li><a href="' + escapeAttr(l.url) + '" rel="noopener">' + escapeHtml(l.text) + '</a></li>';
+      });
+      html += '</ul></div></details>';
+    }
+    html += '</div></article>';
+    root.innerHTML = html;
+  }
+
+  function escapeHtml(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+  function escapeAttr(s) {
+    return escapeHtml(s).replace(/"/g, '&quot;');
+  }
+
+  document.getElementById('term-form').addEventListener('input', schedulePreview);
+  document.getElementById('term-form').addEventListener('change', schedulePreview);
+  runPreview();
+})();
+</script>
+
+<style>
+.term-edit-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; max-width: 1200px; }
+@media (max-width: 900px) { .term-edit-layout { grid-template-columns: 1fr; } }
+.term-edit-form-col .form-row { margin-bottom: 1rem; }
+.pd-related-checkboxes { display: flex; flex-direction: column; gap: 0.35rem; }
+.inline-check { font-weight: normal; }
+</style>
+
+<%- include('../partials/admin-footer') %>

@@ -1,0 +1,35 @@
+<%- include('../partials/admin-head') %>
+
+<h2>Terms</h2>
+<p><a class="btn" href="/admin/terms/new">Add new term</a></p>
+
+<% if (terms.length === 0) { %>
+<p class="empty-msg">No terms yet. Add your first term to get started.</p>
+<% } else { %>
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Updated</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <% terms.forEach(t => { %>
+        <tr>
+            <td><a href="/admin/terms/<%= t.id %>/edit"><%= t.name %></a></td>
+            <td><%= t.updatedAt ? new Date(t.updatedAt).toLocaleString() : '—' %></td>
+            <td>
+                <a href="/admin/terms/<%= t.id %>/edit">Edit</a>
+                <form action="/admin/terms/<%= t.id %>/delete" method="post" style="display:inline;" onsubmit="return confirm('Delete this term?');">
+                    <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
+                    <button type="submit" class="link-btn btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+        <% }) %>
+    </tbody>
+</table>
+<% } %>
+
+<%- include('../partials/admin-footer') %>

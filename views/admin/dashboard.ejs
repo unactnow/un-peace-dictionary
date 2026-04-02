@@ -1,0 +1,28 @@
+<%- include('../partials/admin-head') %>
+
+<h2>Dashboard</h2>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <span class="stat-num"><%= termCount %></span>
+        <span class="stat-label">Terms</span>
+        <a href="/admin/terms">manage terms →</a>
+    </div>
+    <div class="stat-card">
+        <span class="stat-num"><%= userCount %></span>
+        <span class="stat-label">Users</span>
+        <% if (user && user.role === 'admin') { %>
+        <a href="/admin/users">manage users →</a>
+        <% } %>
+    </div>
+    <% if (recentTerm) { %>
+    <div class="stat-card">
+        <span class="stat-label">Last updated term</span>
+        <a href="/admin/terms/<%= recentTerm.id %>/edit"><%= recentTerm.name %></a>
+    </div>
+    <% } %>
+</div>
+
+<p style="margin-top: 2rem;"><a class="btn" href="/export">Export HTML for Drupal</a></p>
+
+<%- include('../partials/admin-footer') %>

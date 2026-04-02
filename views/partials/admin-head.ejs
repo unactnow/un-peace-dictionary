@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Peace Dictionary CMS — <%= typeof title !== 'undefined' ? title : 'Dashboard' %></title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <link rel="stylesheet" href="/css/peace-dictionary-preview.css">
+    <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+</head>
+<body>
+    <header class="admin-header">
+        <a href="/admin" class="admin-logo">Peace Dictionary CMS</a>
+        <nav class="admin-nav">
+            <a href="/admin/terms">Terms</a>
+            <a href="/export">Export</a>
+            <% if (user && user.role === 'admin') { %>
+            <a href="/admin/users">Users</a>
+            <a href="/admin/settings">Settings</a>
+            <% } %>
+            <span class="admin-sep">|</span>
+            <a href="/auth/account">Account</a>
+            <a href="/auth/logout">Logout</a>
+        </nav>
+    </header>
+
+    <main class="admin-main">
+        <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+            <div class="flash-messages">
+            <% success_msg.forEach(msg => { %>
+                <div class="flash flash-success"><%= msg %></div>
+            <% }) %>
+            </div>
+        <% } %>
+        <% if (typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+            <div class="flash-messages">
+            <% error_msg.forEach(msg => { %>
+                <div class="flash flash-error"><%= msg %></div>
+            <% }) %>
+            </div>
+        <% } %>
+        <% if (typeof error !== 'undefined' && error.length > 0) { %>
+            <div class="flash-messages">
+            <% error.forEach(msg => { %>
+                <div class="flash flash-error"><%= msg %></div>
+            <% }) %>
+            </div>
+        <% } %>

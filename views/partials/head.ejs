@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title><%= typeof title !== 'undefined' ? title : ((typeof settings !== 'undefined' && settings.site_name) || 'Peace Dictionary CMS') %></title>
+    <meta name="description" content="<%= (typeof meta_description !== 'undefined' && meta_description) ? meta_description : ((typeof settings !== 'undefined' && settings.tagline) || '') %>">
+    <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : ((typeof settings !== 'undefined' && settings.site_name) || 'Peace Dictionary CMS') %>">
+    <meta property="og:description" content="<%= (typeof meta_description !== 'undefined' && meta_description) ? meta_description : ((typeof settings !== 'undefined' && settings.tagline) || '') %>">
+    <% if (typeof og_image !== 'undefined' && og_image) { %><meta property="og:image" content="<%= og_image %>"><% } %>
+    <link rel="canonical" href="<%= (typeof canonical !== 'undefined' && canonical) ? canonical : '' %>">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="/admin" class="nav-brand"><%= (typeof settings !== 'undefined' && settings.site_name) ? settings.site_name : 'Peace Dictionary CMS' %></a>
+            <div class="nav-links">
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+            <% success_msg.forEach(msg => { %>
+                <div class="flash flash-success"><%= msg %></div>
+            <% }) %>
+        <% } %>
+        <% if (typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+            <% error_msg.forEach(msg => { %>
+                <div class="flash flash-error"><%= msg %></div>
+            <% }) %>
+        <% } %>
+        <% if (typeof error !== 'undefined' && error.length > 0) { %>
+            <% error.forEach(msg => { %>
+                <div class="flash flash-error"><%= msg %></div>
+            <% }) %>
+        <% } %>

@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "installCommand": "npm install",
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "views/**",
+          "public/**",
+          "config/**",
+          "models/**",
+          "routes/**",
+          "middleware/**",
+          "helpers/**"
+        ]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.js"
+    }
+  ],
+  "env": {
+    "VERCEL": "1"
+  }
+}

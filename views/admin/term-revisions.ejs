@@ -1,0 +1,35 @@
+<%- include('../partials/admin-head') %>
+
+<p><a href="/admin/terms/<%= term.id %>/edit">← Back to edit</a></p>
+<h2>Revision history: <%= term.name %></h2>
+
+<% if (revisions.length === 0) { %>
+<p class="empty-msg">No revisions yet.</p>
+<% } else { %>
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>By</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <% revisions.forEach(r => { %>
+        <tr>
+            <td><%= new Date(r.createdAt).toLocaleString() %></td>
+            <td><%= r.revisedBy || '—' %></td>
+            <td>
+                <a href="/admin/terms/<%= term.id %>/revisions/<%= r.id %>">View</a>
+                <form action="/admin/terms/<%= term.id %>/revisions/<%= r.id %>/restore" method="post" style="display:inline;" onsubmit="return confirm('Restore this version? Current content will be saved as a new revision first.');">
+                    <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
+                    <button type="submit" class="link-btn">Restore</button>
+                </form>
+            </td>
+        </tr>
+        <% }) %>
+    </tbody>
+</table>
+<% } %>
+
+<%- include('../partials/admin-footer') %>
