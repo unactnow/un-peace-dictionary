@@ -27,15 +27,49 @@ function buildTermLookup(terms) {
   return byLower;
 }
 
+function fuzzyMatchTerm(key, termLookup) {
+  if (termLookup[key]) return termLookup[key];
+  const slugKey = key.replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+  for (const [name, term] of Object.entries(termLookup)) {
+    if (term.slug === slugKey) return term;
+  }
+  for (const [name, term] of Object.entries(termLookup)) {
+    if (name.includes(key)) return term;
+  }
+  const keyWords = key.split(/\s+/).filter((w) => w.length > 2);
+  let bestMatch = null;
+  let bestScore = 0;
+  for (const [name, term] of Object.entries(termLookup)) {
+    const nameWords = name.split(/\s+/).filter((w) => w.length > 2);
+    const overlap = keyWords.filter((w) => nameWords.includes(w)).length;
+    const score = overlap / Math.max(keyWords.length, 1);
+    if (overlap > bestScore || (overlap === bestScore && score > (bestScore / Math.max(keyWords.length, 1)))) {
+      bestScore = overlap;
+      bestMatch = term;
+    }
+  }
+  if (bestScore >= 1 && bestScore >= keyWords.length * 0.5) return bestMatch;
+  return null;
+}
+
 function resolveWikiLinks(markdown, termLookup) {
   if (!markdown) return '';
-  return markdown.replace(/\[\[([^\]]+)\]\]/g, (match, rawName) => {
-    const key = rawName.trim().toLowerCase();
-    const term = termLookup[key];
-    if (term) {
-      return `<a href="#pd-${escapeHtml(term.slug)}">${escapeHtml(term.name)}</a>`;
+  return markdown.replace(/\[\[([^\]]+)\]\]/g, (match, rawContent) => {
+    let termKey, displayText;
+    if (rawContent.includes('|')) {
+      const parts = rawContent.split('|');
+      termKey = parts[0].trim().toLowerCase();
+      displayText = parts.slice(1).join('|').trim();
+    } else {
+      termKey = rawContent.trim().toLowerCase();
+      displayText = null;
     }
-    return escapeHtml(rawName.trim());
+    const term = fuzzyMatchTerm(termKey, termLookup);
+    const label = displayText || rawContent.trim();
+    if (term) {
+      return `<a href="#pd-${escapeHtml(term.slug)}">${escapeHtml(label)}</a>`;
+    }
+    return escapeHtml(label);
   });
 }
 
@@ -222,7 +256,13 @@ function buildJsonLd(terms, pageUrl, dateModified) {
           const pairs = JSON.parse(sec.body);
           if (Array.isArray(pairs)) {
             pairs.forEach((p) => {
-              if (p.q && p.a) allFaqs.push({ question: p.q, answer: p.a });
+              if (p.q && p.a) {
+                const plainAnswer = p.a
+                  .replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, '$2')
+                  .replace(/\[\[([^\]]+)\]\]/g, '$1')
+                  .replace(/<[^>]+>/g, '');
+                allFaqs.push({ question: p.q, answer: plainAnswer });
+              }
             });
           }
         } catch (e) { /* not JSON */ }

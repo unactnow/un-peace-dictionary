@@ -71,12 +71,18 @@ async function resolveRelatedFromContent(termId, allTextFields) {
     extractWikiLinks(text).forEach((name) => linked.add(name));
   });
   if (linked.size === 0) return [];
-  const conditions = Array.from(linked).map((n) => ({ name: { [Op.like]: n } }));
+  const excludeWhere = termId ? { id: { [Op.ne]: termId } } : {};
+  const conditions = [];
+  Array.from(linked).forEach((n) => {
+    conditions.push({ name: { [Op.iLike]: n } });
+    conditions.push({ name: { [Op.iLike]: `%${n}%` } });
+    conditions.push({ slug: slugify(n) });
+  });
   const matches = await Term.findAll({
-    where: { [Op.or]: conditions, ...(termId ? { id: { [Op.ne]: termId } } : {}) },
+    where: { [Op.or]: conditions, ...excludeWhere },
     attributes: ['id'],
   });
-  return matches.map((t) => t.id);
+  return [...new Set(matches.map((t) => t.id))];
 }
 
 function gatherAllText(body) {
@@ -96,15 +102,18 @@ function gatherAllText(body) {
   return texts;
 }
 
-function generateSearchKeywords(name, abbreviation, leadDef) {
+function generateSearchKeywords(name, abbreviation, allTextFields) {
   const parts = new Set();
   (name || '').toLowerCase().split(/\s+/).forEach((w) => { if (w) parts.add(w); });
   if (abbreviation) {
     parts.add(abbreviation.toLowerCase());
     abbreviation.toLowerCase().split(/\s+/).forEach((w) => { if (w) parts.add(w); });
   }
-  (leadDef || '').replace(/\[\[([^\]]+)\]\]/g, (_, raw) => {
-    raw.trim().toLowerCase().split(/\s+/).forEach((w) => { if (w) parts.add(w); });
+  allTextFields.forEach((text) => {
+    (text || '').replace(/\[\[([^\]]+)\]\]/g, (_, raw) => {
+      const termKey = raw.includes('|') ? raw.split('|')[0] : raw;
+      termKey.trim().toLowerCase().split(/\s+/).forEach((w) => { if (w) parts.add(w); });
+    });
   });
   return Array.from(parts).join(' ');
 }
@@ -194,7 +203,8 @@ router.post('/new', ensureAuthenticated, async (req, res) => {
       req.flash('error_msg', 'A term with that name already exists.');
       return res.redirect('/admin/terms/new');
     }
-    const keywords = generateSearchKeywords(name, abbreviation, lead_definition);
+    const allTexts = gatherAllText(req.body);
+    const keywords = generateSearchKeywords(name, abbreviation, allTexts);
     const term = await Term.create({
       name: name.trim(),
       abbreviation: (abbreviation || '').trim(),
@@ -297,7 +307,8 @@ router.post('/:id/edit', ensureAuthenticated, async (req, res) => {
       return res.redirect(`/admin/terms/${term.id}/edit`);
     }
 
-    const keywords = generateSearchKeywords(name, abbreviation, lead_definition);
+    const allTexts = gatherAllText(req.body);
+    const keywords = generateSearchKeywords(name, abbreviation, allTexts);
     await term.update({
       name: name.trim(),
       abbreviation: (abbreviation || '').trim(),
