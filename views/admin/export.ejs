@@ -1,15 +1,19 @@
 <%- include('../partials/admin-head') %>
 
 <h2>Export HTML</h2>
-<p><strong><%= termCount %></strong> term(s) included. Generated at <%= new Date(generatedAt).toLocaleString() %>.</p>
-<p>
-    <button type="button" class="btn" id="copy-btn">Copy to clipboard</button>
-    <a class="btn" href="/export/download">Download .html</a>
-    <a href="/admin/terms">← Terms</a>
-</p>
+<p><strong><%= termCount %></strong> term(s) ready for export. <span class="hint">Generated at <%= new Date(generatedAt).toLocaleString() %></span></p>
+<div class="btn-row" style="justify-content: space-between;">
+    <div style="display:flex; gap:0.75rem; align-items:center;">
+        <button type="button" class="btn" id="copy-btn">Copy to clipboard</button>
+        <a class="btn btn-outline" href="/export/download">Download HTML</a>
+    </div>
+    <a href="/admin/terms">&larr; Back to terms list</a>
+</div>
 
-<label for="export-raw" class="hint">Full fragment for Drupal (paste into a text field)</label>
-<textarea readonly id="export-raw" rows="28" class="export-textarea"><%- htmlOutput %></textarea>
+<h3 class="hint">Code</h3>
+<pre class="export-pre"><code id="export-code"><%= htmlOutput %></code></pre>
+
+<textarea id="export-raw" hidden aria-hidden="true"><%- htmlOutput %></textarea>
 
 <script>
 (function () {
@@ -17,7 +21,6 @@
   var btn = document.getElementById('copy-btn');
   if (!raw || !btn) return;
   btn.addEventListener('click', function () {
-    raw.select();
     navigator.clipboard.writeText(raw.value).then(function () {
       btn.textContent = 'Copied!';
       setTimeout(function () { btn.textContent = 'Copy to clipboard'; }, 2000);
@@ -27,17 +30,22 @@
 </script>
 
 <style>
-.export-textarea {
-  width: 100%;
-  font-family: ui-monospace, monospace;
-  font-size: 0.75rem;
-  line-height: 1.4;
+.export-pre {
+  font-family: ui-monospace, "SF Mono", monospace;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  max-height: 75vh;
+  overflow: auto;
+  background: #f8f9fa;
+  color: var(--color-text);
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius);
+  white-space: pre-wrap;
+  word-break: break-word;
   margin-top: 0.5rem;
-  padding: 0.75rem;
-  border: 1px solid var(--color-border, #e5e7eb);
-  border-radius: 6px;
-  max-height: 70vh;
+  border: 1px solid var(--color-border);
 }
+.export-pre code { font-family: inherit; font-size: inherit; }
 </style>
 
 <%- include('../partials/admin-footer') %>

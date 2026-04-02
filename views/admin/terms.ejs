@@ -1,25 +1,36 @@
 <%- include('../partials/admin-head') %>
 
 <h2>Terms</h2>
-<p><a class="btn" href="/admin/terms/new">Add new term</a></p>
+<div class="btn-row">
+    <span><strong><%= terms.length %></strong> term(s)</span>
+    <a class="btn" href="/admin/terms/new">+ New term</a>
+    <a class="btn btn-outline btn-sm" href="/admin/terms/json/export">Export JSON</a>
+    <button type="button" class="btn btn-outline btn-sm" id="import-btn">Import JSON</button>
+    <input type="file" id="import-file" accept=".json,application/json" hidden>
+</div>
 
 <% if (terms.length === 0) { %>
 <p class="empty-msg">No terms yet. Add your first term to get started.</p>
 <% } else { %>
-<table class="admin-table">
+
+<div class="form-row" style="max-width:360px; margin-top: 1rem;">
+    <input type="search" id="term-filter" placeholder="Filter terms…" autocomplete="off">
+</div>
+
+<table class="admin-table" id="terms-table">
     <thead>
         <tr>
-            <th>Name</th>
-            <th>Updated</th>
+            <th class="sortable" data-sort="name">Name <span class="sort-arrow">&#9650;</span></th>
+            <th class="sortable" data-sort="updated">Updated <span class="sort-arrow"></span></th>
             <th></th>
         </tr>
     </thead>
     <tbody>
         <% terms.forEach(t => { %>
-        <tr>
+        <tr data-name="<%= t.name.toLowerCase() %>" data-updated="<%= t.updatedAt ? new Date(t.updatedAt).getTime() : 0 %>">
             <td><a href="/admin/terms/<%= t.id %>/edit"><%= t.name %></a></td>
             <td><%= t.updatedAt ? new Date(t.updatedAt).toLocaleString() : '—' %></td>
-            <td>
+            <td class="table-actions">
                 <a href="/admin/terms/<%= t.id %>/edit">Edit</a>
                 <form action="/admin/terms/<%= t.id %>/delete" method="post" style="display:inline;" onsubmit="return confirm('Delete this term?');">
                     <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
@@ -30,6 +41,131 @@
         <% }) %>
     </tbody>
 </table>
+<p class="hint" id="filter-status" hidden></p>
 <% } %>
+
+<script>
+(function () {
+  /* ---- filter ---- */
+  var filter = document.getElementById('term-filter');
+  var table = document.getElementById('terms-table');
+  var status = document.getElementById('filter-status');
+  if (filter && table) {
+    var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
+    filter.addEventListener('input', function () {
+      var q = filter.value.toLowerCase().trim();
+      var visible = 0;
+      rows.forEach(function (row) {
+        var match = !q || row.getAttribute('data-name').indexOf(q) !== -1;
+        row.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      if (q && status) {
+        status.hidden = false;
+        status.textContent = visible + ' of ' + rows.length + ' term(s) shown';
+      } else if (status) {
+        status.hidden = true;
+      }
+    });
+  }
+
+  /* ---- sort ---- */
+  var currentSort = 'name';
+  var currentDir = 'asc';
+  var headers = table ? table.querySelectorAll('th.sortable') : [];
+  headers.forEach(function (th) {
+    th.style.cursor = 'pointer';
+    th.addEventListener('click', function () {
+      var col = th.getAttribute('data-sort');
+      if (currentSort === col) {
+        currentDir = currentDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort = col;
+        currentDir = 'asc';
+      }
+      sortRows(col, currentDir);
+      headers.forEach(function (h) {
+        var arrow = h.querySelector('.sort-arrow');
+        if (h === th) {
+          arrow.innerHTML = currentDir === 'asc' ? '&#9650;' : '&#9660;';
+        } else {
+          arrow.innerHTML = '';
+        }
+      });
+    });
+  });
+
+  function sortRows(col, dir) {
+    if (!table) return;
+    var tbody = table.querySelector('tbody');
+    rows.sort(function (a, b) {
+      var av, bv;
+      if (col === 'updated') {
+        av = parseInt(a.getAttribute('data-updated') || '0', 10);
+        bv = parseInt(b.getAttribute('data-updated') || '0', 10);
+      } else {
+        av = (a.getAttribute('data-name') || '');
+        bv = (b.getAttribute('data-name') || '');
+      }
+      if (av < bv) return dir === 'asc' ? -1 : 1;
+      if (av > bv) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    rows.forEach(function (r) { tbody.appendChild(r); });
+  }
+
+  /* ---- JSON import ---- */
+  var importBtn = document.getElementById('import-btn');
+  var importFile = document.getElementById('import-file');
+  var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  if (importBtn && importFile) {
+    importBtn.addEventListener('click', function () { importFile.click(); });
+    importFile.addEventListener('change', function () {
+      var file = importFile.files[0];
+      if (!file) return;
+      if (!confirm('Import terms from ' + file.name + '? Existing terms with matching slugs will be overwritten.')) {
+        importFile.value = '';
+        return;
+      }
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var data;
+        try { data = JSON.parse(e.target.result); } catch (err) {
+          alert('Invalid JSON file.');
+          return;
+        }
+        fetch('/admin/terms/json/import', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfMeta ? csrfMeta.content : '',
+          },
+          body: JSON.stringify(data),
+        })
+          .then(function (r) { return r.json(); })
+          .then(function (result) {
+            if (result.ok) {
+              alert('Imported ' + result.total + ' term(s): ' + result.created + ' created, ' + result.updated + ' updated.');
+              location.reload();
+            } else {
+              alert('Import error: ' + (result.error || 'Unknown'));
+            }
+          })
+          .catch(function (err) { alert('Import failed: ' + err.message); });
+      };
+      reader.readAsText(file);
+      importFile.value = '';
+    });
+  }
+})();
+</script>
+
+<style>
+.sortable { user-select: none; }
+.sortable:hover { color: var(--un-blue); }
+.sort-arrow { font-size: 0.65rem; margin-left: 2px; color: var(--color-muted); }
+.table-actions { white-space: nowrap; }
+.table-actions a { margin-right: 0.5rem; }
+</style>
 
 <%- include('../partials/admin-footer') %>

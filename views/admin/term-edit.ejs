@@ -1,11 +1,12 @@
 <%- include('../partials/admin-head') %>
+<link rel="stylesheet" href="/css/peace-dictionary-preview.css">
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
 
-<h2><%= term ? 'Edit term' : 'New term' %></h2>
-<% if (term) { %>
-<p><a href="/admin/terms/<%= term.id %>/revisions">View <%= revisions.length %> revision(s)</a></p>
-<% } %>
+<div class="page-title-bar">
+    <h2><%= term ? 'Edit term' : 'New term' %><% if (term) { %> <span class="title-meta">(<a href="/admin/terms/<%= term.id %>/revisions"><%= revisions.length %> revision<%= revisions.length !== 1 ? 's' : '' %></a>)</span><% } %></h2>
+</div>
 
-<form method="post" action="<%= term ? '/admin/terms/' + term.id + '/edit' : '/admin/terms/new' %>" id="term-form" class="term-edit-layout">
+<form method="post" action="<%= term ? '/admin/terms/' + term.id + '/edit' : '/admin/terms/new' %>" id="term-form" class="term-edit-layout" onsubmit="syncEditors(); reindexLinks(); return validateQa();">
     <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
 
     <div class="term-edit-form-col">
@@ -13,14 +14,19 @@
             <label for="name">Term name *</label>
             <input type="text" id="name" name="name" required value="<%= term ? term.name : '' %>">
         </div>
+        <% if (term && term.slug) { %>
         <div class="form-row">
-            <label for="abbreviation">Abbreviation expansion (optional)</label>
-            <input type="text" id="abbreviation" name="abbreviation" placeholder="Full phrase for abbr title" value="<%= term ? term.abbreviation : '' %>">
+            <label for="slug">Page slug</label>
+            <% const isAdmin = user && user.role === 'admin'; %>
+            <input type="text" id="slug" name="slug" value="<%= term.slug %>" <%= isAdmin ? '' : 'disabled' %> class="<%= isAdmin ? '' : 'field-readonly' %>">
+            <span class="hint"><%= isAdmin ? 'Auto-generated from the term name. Edit only if needed.' : 'Only admins can change the slug.' %></span>
         </div>
+        <% } %>
+
         <div class="form-row">
-            <label for="slug">Slug (URL fragment)</label>
-            <input type="text" id="slug" name="slug" value="<%= term ? term.slug : '' %>">
-            <span class="hint">Auto-filled from name; used as <code>#pd-…</code> in the export.</span>
+            <label for="abbreviation">Full form (optional)</label>
+            <input type="text" id="abbreviation" name="abbreviation" placeholder="e.g. United Nations Development Programme" value="<%= term ? term.abbreviation : '' %>">
+            <span class="hint">If this term is an abbreviation, enter the full phrase it stands for.</span>
         </div>
         <div class="form-row">
             <label for="pronunciation">Pronunciation (optional)</label>
@@ -29,213 +35,374 @@
         <div class="form-row">
             <label for="part_of_speech">Part of speech</label>
             <select id="part_of_speech" name="part_of_speech">
-                <% const pos = term ? term.partOfSpeech : 'noun'; %>
+                <% const pos = term ? (term.partOfSpeech || '') : ''; %>
+                <option value="" <%= pos === '' ? 'selected' : '' %>></option>
                 <% ['noun','verb','adjective','abbreviation'].forEach(p => { %>
                 <option value="<%= p %>" <%= pos === p ? 'selected' : '' %>><%= p %></option>
                 <% }) %>
             </select>
         </div>
         <div class="form-row">
-            <label for="lead_definition">Lead definition (markdown) *</label>
-            <textarea id="lead_definition" name="lead_definition" rows="8" required class="pd-md"><%= term ? term.leadDefinition : '' %></textarea>
+            <label>Definition *</label>
+            <textarea id="lead_definition" name="lead_definition" class="pd-md" hidden><%= term ? term.leadDefinition : '' %></textarea>
+            <div class="quill-wrap" data-target="lead_definition"></div>
         </div>
+
+        <% predefinedSections.forEach(function(def) { %>
+        <div class="form-row" data-section-key="<%= def.key %>">
+            <label><%= def.title %></label>
+            <textarea name="section_slots[<%= def.key %>]" class="pd-md" hidden><%= sectionSlots[def.key] || '' %></textarea>
+            <div class="quill-wrap" data-target-section="<%= def.key %>"></div>
+        </div>
+        <% }) %>
+
         <div class="form-row">
-            <label for="search_keywords">Extra search keywords</label>
-            <textarea id="search_keywords" name="search_keywords" rows="2" placeholder="comma or space separated"><%= term ? term.searchKeywords : '' %></textarea>
-        </div>
-
-        <h3>Accordion sections</h3>
-        <div id="sections-container">
-            <% sections.forEach((s, i) => { %>
-            <div class="accordion-block" data-section-index="<%= i %>">
-                <div class="form-row">
-                    <label>Section title</label>
-                    <input type="text" name="sections[<%= i %>][title]" value="<%= s.title %>">
+            <label>Questions people ask <span class="hint" id="questions-suffix" style="font-weight:400;"></span></label>
+            <p class="hint" style="margin-bottom:0.5rem;">Add common questions and their answers. Leave empty to skip.</p>
+            <div id="qa-container">
+                <% (qaPairs || []).forEach(function(pair, i) { %>
+                <div class="qa-pair">
+                    <input type="text" name="qa_question" value="<%= pair.q %>" placeholder="Question text">
+                    <textarea name="qa_answer" class="pd-md" hidden><%= pair.a %></textarea>
+                    <div class="quill-wrap quill-sm" data-qa-index="<%= i %>"></div>
+                    <button type="button" class="link-btn remove-qa" aria-label="Remove">Remove</button>
                 </div>
-                <div class="form-row">
-                    <label>Body (markdown)</label>
-                    <textarea name="sections[<%= i %>][body]" rows="5" class="pd-md"><%= s.body %></textarea>
-                </div>
-                <button type="button" class="link-btn remove-section">Remove section</button>
-                <hr>
+                <% }) %>
             </div>
-            <% }) %>
+            <button type="button" class="btn btn-outline btn-sm" id="add-qa" style="margin-top:0.5rem;">+ Add question</button>
         </div>
-        <p><button type="button" class="btn" id="add-section">Add section</button></p>
-
-        <h3>Related terms</h3>
-        <div class="pd-related-checkboxes">
-            <% allTerms.forEach(t => { %>
-            <label class="inline-check"><input type="checkbox" name="relatedTermIds" value="<%= t.id %>" <%= relatedIdList && relatedIdList.indexOf(t.id) !== -1 ? 'checked' : '' %>> <%= t.name %></label>
-            <% }) %>
-        </div>
-        <% if (allTerms.length === 0) { %><p class="hint">Save other terms first to link them here.</p><% } %>
 
         <h3>External links</h3>
         <div id="links-container">
             <% externalLinks.forEach((l, i) => { %>
-            <div class="link-block" data-link-index="<%= i %>">
-                <div class="form-row">
-                    <label>Link text</label>
-                    <input type="text" name="links[<%= i %>][text]" value="<%= l.text %>">
+            <div class="link-block">
+                <div class="link-block-row">
+                    <input type="text" name="links[<%= i %>][text]" value="<%= l.text %>" placeholder="Link text">
+                    <input type="url" name="links[<%= i %>][url]" value="<%= l.url %>" placeholder="https://…">
+                    <button type="button" class="link-btn remove-link" aria-label="Remove">×</button>
                 </div>
-                <div class="form-row">
-                    <label>URL</label>
-                    <input type="url" name="links[<%= i %>][url]" value="<%= l.url %>">
-                </div>
-                <button type="button" class="link-btn remove-link">Remove link</button>
-                <hr>
             </div>
             <% }) %>
         </div>
-        <p><button type="button" class="btn" id="add-link">Add link</button></p>
+        <p><button type="button" class="btn btn-outline btn-sm" id="add-link">+ Add link</button></p>
 
-        <p><button type="submit" class="btn">Save</button></p>
+        <div class="btn-row" style="margin-top: 2rem;">
+            <button type="submit" class="btn">Save term</button>
+            <% if (term) { %>
+            <button type="button" class="btn btn-delete" onclick="if(confirm('Delete this term permanently?'))document.getElementById('delete-form').submit();">Delete term</button>
+            <% } %>
+        </div>
     </div>
 
     <div class="term-edit-preview-col">
-        <h3>Live preview</h3>
+        <div class="md-guide">
+            <h3 style="margin-top:0;">Formatting tips</h3>
+            <p class="hint" style="margin:0;">Use the toolbar for bold, italic, links, and lists. Type <code>[[Term Name]]</code> to link to another dictionary term — these automatically create cross-references and populate the Related terms section.</p>
+        </div>
+
+        <div class="preview-header">Term preview</div>
         <div class="pd-preview-wrap">
-            <div class="peace-dictionary" id="pd-preview-root"></div>
+            <div class="pd-preview">
+                <div class="peace-dictionary" id="pd-preview-root"></div>
+            </div>
         </div>
     </div>
 </form>
 
 <% if (term) { %>
-<form method="post" action="/admin/terms/<%= term.id %>/delete" onsubmit="return confirm('Delete this term permanently?');" style="margin-top: 2rem;">
+<form method="post" action="/admin/terms/<%= term.id %>/delete" id="delete-form" hidden>
     <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
-    <button type="submit" class="link-btn btn-danger">Delete term</button>
 </form>
 <% } %>
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
 (function () {
   var allTerms = <%- JSON.stringify(allTerms.map(function(t) { return { id: t.id, name: t.name, slug: t.slug }; })) %>;
   var lookup = {};
   allTerms.forEach(function (t) { lookup[t.name.trim().toLowerCase()] = t; });
 
-  var slugTouched = <%= term ? 'true' : 'false' %>;
-  var nameEl = document.getElementById('name');
-  var slugEl = document.getElementById('slug');
-  if (nameEl && slugEl) {
-    nameEl.addEventListener('input', function () {
-      if (!slugTouched) {
-        var s = nameEl.value.toLowerCase().trim().replace(/[^\\w\\s-]/g, '').replace(/[\\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-        slugEl.value = s;
-      }
+  var SECTION_KEYS = <%- JSON.stringify(predefinedSections.map(function(s) { return { key: s.key, title: s.title }; })) %>;
+
+  var QUILL_TOOLBAR = [
+    ['bold', 'italic'],
+    ['link'],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['clean']
+  ];
+
+  var editors = [];
+
+  function initQuill(wrapEl, textareaEl, customPlaceholder) {
+    var quill = new Quill(wrapEl, {
+      theme: 'snow',
+      modules: { toolbar: QUILL_TOOLBAR },
+      placeholder: customPlaceholder || 'Leave blank to skip'
     });
-    slugEl.addEventListener('input', function () { slugTouched = true; });
+    var original = textareaEl.value || '';
+    var ready = false;
+    if (original.trim()) {
+      var htmlToLoad = original;
+      if (original.trim().charAt(0) !== '<') {
+        htmlToLoad = original
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+          .replace(/\n/g, '<br>');
+      }
+      try {
+        var delta = quill.clipboard.convert({ html: htmlToLoad });
+        quill.setContents(delta, 'silent');
+      } catch (e) {
+        quill.root.innerHTML = htmlToLoad;
+      }
+    }
+    var entry = { quill: quill, textarea: textareaEl, original: original };
+    editors.push(entry);
+    setTimeout(function () {
+      var cleaned = cleanQuillHtml(quill);
+      textareaEl.value = cleaned || original;
+      ready = true;
+    }, 0);
+    quill.on('text-change', function () {
+      if (!ready) return;
+      var cleaned = cleanQuillHtml(quill);
+      textareaEl.value = cleaned || entry.original;
+      schedulePreview();
+    });
+    return quill;
   }
 
-  var sectionIdx = <%= sections.length %>;
-  document.getElementById('add-section').addEventListener('click', function () {
-    var c = document.getElementById('sections-container');
+  function cleanQuillHtml(quill) {
+    var html = quill.root.innerHTML;
+    if (html === '<p><br></p>' || html === '<p></p>') return '';
+
+    html = html.replace(/<span[^>]*>([\s\S]*?)<\/span>/g, '$1');
+    html = html.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/g, function (match, inner) {
+      if (/data-list="bullet"/.test(inner)) {
+        var clean = inner.replace(/\s*data-list="[^"]*"/g, '').replace(/\s*class="[^"]*"/g, '');
+        return '<ul>' + clean + '</ul>';
+      }
+      return '<ol>' + inner.replace(/\s*data-list="[^"]*"/g, '').replace(/\s*class="[^"]*"/g, '') + '</ol>';
+    });
+    html = html.replace(/<p>\s*<br\s*\/?>\s*<\/p>/g, '');
+    html = html.replace(/<p>\s*<\/p>/g, '');
+    html = html.replace(/<p>&nbsp;<\/p>/g, '');
+    html = html.replace(/(<br\s*\/?>){2,}/g, '<br>');
+    html = html.replace(/^\s*<br\s*\/?>\s*/g, '');
+    html = html.replace(/\s*<br\s*\/?>\s*$/g, '');
+    html = html.trim();
+    return html;
+  }
+
+  document.querySelectorAll('.quill-wrap[data-target]').forEach(function (wrap) {
+    var targetId = wrap.getAttribute('data-target');
+    var ta = document.getElementById(targetId);
+    if (ta) initQuill(wrap, ta);
+  });
+
+  document.querySelectorAll('.quill-wrap[data-target-section]').forEach(function (wrap) {
+    var key = wrap.getAttribute('data-target-section');
+    var ta = wrap.closest('.form-row').querySelector('textarea');
+    if (ta) initQuill(wrap, ta);
+  });
+
+  document.querySelectorAll('.quill-wrap[data-qa-index]').forEach(function (wrap) {
+    var ta = wrap.closest('.qa-pair').querySelector('textarea[name="qa_answer"]');
+    if (ta) initQuill(wrap, ta, 'Answer text');
+  });
+
+  window.syncEditors = function () {
+    editors.forEach(function (e) {
+      var cleaned = cleanQuillHtml(e.quill);
+      e.textarea.value = cleaned || e.original || '';
+    });
+  };
+
+  window.validateQa = function () {
+    var pairs = document.querySelectorAll('#qa-container .qa-pair');
+    for (var i = 0; i < pairs.length; i++) {
+      var q = (pairs[i].querySelector('input[name="qa_question"]').value || '').trim();
+      var a = (pairs[i].querySelector('textarea[name="qa_answer"]').value || '').replace(/<[^>]*>/g, '').trim();
+      if (!q && !a) continue;
+      if (!q) { alert('Please enter question text for Q&A pair ' + (i + 1) + '.'); pairs[i].querySelector('input[name="qa_question"]').focus(); return false; }
+      if (!a) { alert('Please enter answer text for Q&A pair ' + (i + 1) + '.'); return false; }
+    }
+    return true;
+  };
+
+  var nameEl = document.getElementById('name');
+
+  function updateQuestionsSuffix() {
+    var el = document.getElementById('questions-suffix');
+    if (el && nameEl) {
+      var n = nameEl.value.trim();
+      el.textContent = n ? 'about \u201c' + n.toLowerCase() + '\u201d' : '';
+    }
+  }
+  if (nameEl) nameEl.addEventListener('input', function () { updateQuestionsSuffix(); schedulePreview(); });
+  updateQuestionsSuffix();
+
+  /* ---- external links ---- */
+  function nextLinkIndex() { return document.querySelectorAll('#links-container .link-block').length; }
+
+  document.getElementById('add-link').addEventListener('click', function () {
+    var c = document.getElementById('links-container');
+    var i = nextLinkIndex();
     var div = document.createElement('div');
-    div.className = 'accordion-block';
-    div.innerHTML = '<div class="form-row"><label>Section title</label><input type="text" name="sections[' + sectionIdx + '][title]" value=""></div>' +
-      '<div class="form-row"><label>Body (markdown)</label><textarea name="sections[' + sectionIdx + '][body]" rows="5" class="pd-md"></textarea></div>' +
-      '<button type="button" class="link-btn remove-section">Remove section</button><hr>';
+    div.className = 'link-block';
+    div.innerHTML = '<div class="link-block-row">' +
+      '<input type="text" name="links[' + i + '][text]" placeholder="Link text">' +
+      '<input type="url" name="links[' + i + '][url]" placeholder="https://…">' +
+      '<button type="button" class="link-btn remove-link" aria-label="Remove">×</button></div>';
     c.appendChild(div);
-    sectionIdx++;
-    bindRemove(div, '.remove-section', function () { div.remove(); schedulePreview(); });
-    div.querySelector('textarea').addEventListener('input', schedulePreview);
+    div.querySelector('.remove-link').addEventListener('click', function () { div.remove(); schedulePreview(); });
+    div.querySelectorAll('input').forEach(function (inp) { inp.addEventListener('input', schedulePreview); });
+    schedulePreview();
+  });
+
+  document.querySelectorAll('.remove-link').forEach(function (btn) {
+    btn.addEventListener('click', function () { btn.closest('.link-block').remove(); schedulePreview(); });
+  });
+
+  /* ---- Q&A pairs ---- */
+  var qaCounter = document.querySelectorAll('#qa-container .qa-pair').length;
+
+  document.getElementById('add-qa').addEventListener('click', function () {
+    var c = document.getElementById('qa-container');
+    var div = document.createElement('div');
+    div.className = 'qa-pair';
+    div.innerHTML = '<input type="text" name="qa_question" placeholder="Question text">' +
+      '<textarea name="qa_answer" class="pd-md" hidden></textarea>' +
+      '<div class="quill-wrap quill-sm" data-qa-index="' + qaCounter + '"></div>' +
+      '<button type="button" class="link-btn remove-qa" aria-label="Remove">Remove</button>';
+    c.appendChild(div);
+    qaCounter++;
+    var wrap = div.querySelector('.quill-wrap');
+    var ta = div.querySelector('textarea[name="qa_answer"]');
+    initQuill(wrap, ta, 'Answer text');
+    div.querySelector('.remove-qa').addEventListener('click', function () { div.remove(); schedulePreview(); });
     div.querySelector('input').addEventListener('input', schedulePreview);
     schedulePreview();
   });
 
-  var linkIdx = <%= externalLinks.length %>;
-  document.getElementById('add-link').addEventListener('click', function () {
-    var c = document.getElementById('links-container');
-    var div = document.createElement('div');
-    div.className = 'link-block';
-    div.innerHTML = '<div class="form-row"><label>Link text</label><input type="text" name="links[' + linkIdx + '][text]" value=""></div>' +
-      '<div class="form-row"><label>URL</label><input type="url" name="links[' + linkIdx + '][url]" value=""></div>' +
-      '<button type="button" class="link-btn remove-link">Remove link</button><hr>';
-    c.appendChild(div);
-    linkIdx++;
-    bindRemove(div, '.remove-link', function () { div.remove(); schedulePreview(); });
-    div.querySelectorAll('input').forEach(function (i) { i.addEventListener('input', schedulePreview); });
-    schedulePreview();
+  document.querySelectorAll('.remove-qa').forEach(function (btn) {
+    btn.addEventListener('click', function () { btn.closest('.qa-pair').remove(); schedulePreview(); });
   });
 
-  function bindRemove(parent, sel, fn) {
-    var btn = parent.querySelector(sel);
-    if (btn) btn.addEventListener('click', fn);
+  /* ---- wiki-link helpers ---- */
+  function getAllContent() {
+    var texts = [];
+    editors.forEach(function (e) {
+      texts.push(e.quill.getText());
+    });
+    document.querySelectorAll('input[name="qa_question"]').forEach(function (inp) {
+      texts.push(inp.value);
+    });
+    return texts.join('\n');
   }
-  document.querySelectorAll('.remove-section').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      btn.closest('.accordion-block').remove();
-      schedulePreview();
-    });
-  });
-  document.querySelectorAll('.remove-link').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      btn.closest('.link-block').remove();
-      schedulePreview();
-    });
-  });
 
-  function wikiToMdLinks(text) {
-    if (!text) return '';
-    return text.replace(/\[\[([^\]]+)\]\]/g, function (_, raw) {
+  function scanWikiLinks() {
+    var found = {};
+    var all = getAllContent().replace(/<[^>]*>/g, '');
+    all.replace(/\[\[([^\]]+)\]\]/g, function (_, raw) {
+      var key = raw.trim().toLowerCase();
+      if (lookup[key]) found[key] = lookup[key];
+    });
+    return found;
+  }
+
+  function resolveWikiHtml(html) {
+    if (!html) return '';
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    var text = tmp.textContent || tmp.innerText || '';
+    var wikiMatches = [];
+    text.replace(/\[\[([^\]]+)\]\]/g, function (full, raw) {
+      wikiMatches.push(raw);
+    });
+    if (wikiMatches.length === 0) return html;
+    var result = html;
+    wikiMatches.forEach(function (raw) {
       var t = lookup[raw.trim().toLowerCase()];
-      if (t) return '[' + t.name + '](#pd-' + t.slug + ')';
-      return raw.trim();
+      var linkHtml = t
+        ? '<a href="#pd-' + escapeHtml(t.slug) + '">' + escapeHtml(t.name) + '</a>'
+        : escapeHtml(raw.trim());
+      result = result.replace('[[' + raw + ']]', linkHtml);
     });
+    return result;
   }
 
+  /* ---- live preview ---- */
   var previewTimer;
-  function schedulePreview() {
-    clearTimeout(previewTimer);
-    previewTimer = setTimeout(runPreview, 300);
+  function schedulePreview() { clearTimeout(previewTimer); previewTimer = setTimeout(runPreview, 300); }
+
+  function getEditorHtml(ta) {
+    var entry = editors.find(function (e) { return e.textarea === ta; });
+    if (entry) {
+      var cleaned = cleanQuillHtml(entry.quill);
+      return cleaned || ta.value || '';
+    }
+    return ta.value || '';
   }
 
   function runPreview() {
     var root = document.getElementById('pd-preview-root');
-    if (!root || typeof marked === 'undefined') return;
-    var name = (document.getElementById('name') && document.getElementById('name').value) || '';
+    if (!root) return;
+    var name = (nameEl && nameEl.value) || '';
     var abbr = document.getElementById('abbreviation') && document.getElementById('abbreviation').value;
     var pron = document.getElementById('pronunciation') && document.getElementById('pronunciation').value;
     var pos = document.getElementById('part_of_speech') && document.getElementById('part_of_speech').value;
-    var lead = document.getElementById('lead_definition') && document.getElementById('lead_definition').value;
-    var html = '';
-    html += '<article class="pd-entry">';
+    var leadTa = document.getElementById('lead_definition');
+    var lead = leadTa ? getEditorHtml(leadTa) : '';
+    var html = '<article class="pd-entry">';
+
     html += '<h3 class="pd-entry-term">';
-    if (abbr) {
-      html += '<dfn><abbr title="' + escapeAttr(abbr) + '">' + escapeHtml(name) + '</abbr></dfn>';
-    } else {
-      html += '<dfn>' + escapeHtml(name) + '</dfn>';
-    }
+    if (abbr) html += '<dfn><abbr title="' + escapeAttr(abbr) + '">' + escapeHtml(name) + '</abbr></dfn>';
+    else html += '<dfn>' + escapeHtml(name) + '</dfn>';
     html += '</h3>';
-    if (abbr) {
-      html += '<p class="pd-entry-meta">' + escapeHtml(abbr) + ' <span class="pd-pos">' + escapeHtml(pos || 'abbreviation') + '</span></p>';
-    } else {
-      html += '<p class="pd-entry-meta">' + (pron ? '<span aria-label="pronunciation">' + escapeHtml(pron) + '</span> ' : '') + '<span class="pd-pos">' + escapeHtml(pos || 'noun') + '</span></p>';
-    }
+
+    if (abbr) html += '<p class="pd-entry-meta">' + escapeHtml(abbr) + ' <span class="pd-pos">' + escapeHtml(pos || 'abbreviation') + '</span></p>';
+    else html += '<p class="pd-entry-meta">' + (pron ? '<span aria-label="pronunciation">' + escapeHtml(pron) + '</span> ' : '') + '<span class="pd-pos">' + escapeHtml(pos || 'noun') + '</span></p>';
+
     html += '<div class="pd-entry-body">';
-    html += marked.parse(wikiToMdLinks(lead || ''));
-    document.querySelectorAll('#sections-container .accordion-block').forEach(function (block) {
-      var titleIn = block.querySelector('input[type="text"]');
-      var ta = block.querySelector('textarea');
-      var title = titleIn ? titleIn.value.trim() : '';
-      var body = ta ? ta.value : '';
-      if (!title && !body) return;
-      html += '<details><summary>' + escapeHtml(title || 'Section') + '</summary><div class="pd-details-body">' + marked.parse(wikiToMdLinks(body)) + '</div></details>';
+    html += resolveWikiHtml(lead);
+
+    SECTION_KEYS.forEach(function (def) {
+      var row = document.querySelector('[data-section-key="' + def.key + '"]');
+      if (!row) return;
+      var ta = row.querySelector('textarea');
+      var body = ta ? getEditorHtml(ta) : '';
+      if (!body) return;
+      html += '<details><summary>' + escapeHtml(def.title) + '</summary><div class="pd-details-body">' + resolveWikiHtml(body) + '</div></details>';
     });
-    var related = [];
-    document.querySelectorAll('input[name="relatedTermIds"]:checked').forEach(function (cb) {
-      var id = cb.value;
-      var t = allTerms.find(function (x) { return x.id === id; });
-      if (t) related.push(t);
+
+    var qaPairs = [];
+    document.querySelectorAll('#qa-container .qa-pair').forEach(function (pair) {
+      var q = pair.querySelector('input[name="qa_question"]');
+      var ta = pair.querySelector('textarea[name="qa_answer"]');
+      var qv = q ? q.value.trim() : '';
+      var av = ta ? getEditorHtml(ta) : '';
+      if (qv || av) qaPairs.push({ q: qv, a: av });
     });
-    if (related.length) {
-      html += '<details open><summary>Related terms</summary><div class="pd-details-body"><div class="pd-related-terms">';
-      related.forEach(function (t) {
-        html += '<a href="#pd-' + escapeHtml(t.slug) + '">' + escapeHtml(t.name) + '</a>';
+    if (qaPairs.length > 0) {
+      var qaTitle = name ? 'Questions people ask about \u201c' + name.toLowerCase() + '\u201d' : 'Questions people ask';
+      html += '<details><summary>' + escapeHtml(qaTitle) + '</summary><div class="pd-details-body">';
+      qaPairs.forEach(function (p) {
+        html += '<p><strong>' + escapeHtml(p.q) + '</strong></p>' + resolveWikiHtml(p.a);
       });
+      html += '</div></details>';
+    }
+
+    var linked = scanWikiLinks();
+    var related = Object.values(linked);
+    if (related.length) {
+      related.sort(function (a, b) { return a.name.localeCompare(b.name); });
+      html += '<details open><summary>Related terms</summary><div class="pd-details-body"><div class="pd-related-terms">';
+      related.forEach(function (t) { html += '<a href="#pd-' + escapeHtml(t.slug) + '">' + escapeHtml(t.name) + '</a>'; });
       html += '</div></div></details>';
     }
+
     var extLinks = [];
     document.querySelectorAll('#links-container .link-block').forEach(function (block) {
       var inputs = block.querySelectorAll('input');
@@ -245,37 +412,120 @@
     });
     if (extLinks.length) {
       html += '<details><summary>Learn more</summary><div class="pd-details-body pd-learn-more"><ul>';
-      extLinks.forEach(function (l) {
-        html += '<li><a href="' + escapeAttr(l.url) + '" rel="noopener">' + escapeHtml(l.text) + '</a></li>';
-      });
+      extLinks.forEach(function (l) { html += '<li><a href="' + escapeAttr(l.url) + '" rel="noopener">' + escapeHtml(l.text) + '</a></li>'; });
       html += '</ul></div></details>';
     }
+
     html += '</div></article>';
     root.innerHTML = html;
   }
 
-  function escapeHtml(s) {
-    if (!s) return '';
-    var d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
-  }
-  function escapeAttr(s) {
-    return escapeHtml(s).replace(/"/g, '&quot;');
-  }
+  function escapeHtml(s) { if (!s) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
 
-  document.getElementById('term-form').addEventListener('input', schedulePreview);
+  window.reindexLinks = function () {
+    document.querySelectorAll('#links-container .link-block').forEach(function (block, i) {
+      block.querySelectorAll('[name^="links["]').forEach(function (el) {
+        if (el.name) el.name = el.name.replace(/links\[\d+\]/, 'links[' + i + ']');
+      });
+    });
+  };
+
   document.getElementById('term-form').addEventListener('change', schedulePreview);
   runPreview();
 })();
 </script>
 
 <style>
-.term-edit-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start; max-width: 1200px; }
-@media (max-width: 900px) { .term-edit-layout { grid-template-columns: 1fr; } }
-.term-edit-form-col .form-row { margin-bottom: 1rem; }
-.pd-related-checkboxes { display: flex; flex-direction: column; gap: 0.35rem; }
-.inline-check { font-weight: normal; }
+.page-title-bar {
+    border-bottom: 2px solid var(--un-blue);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+.page-title-bar h2 { margin-bottom: 0; }
+.title-meta {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--color-muted);
+}
+.title-meta a { color: var(--un-blue); }
+.title-meta a:hover { color: var(--un-blue-dark); }
+.term-edit-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+}
+@media (max-width: 960px) { .term-edit-layout { grid-template-columns: 1fr; } }
+.term-edit-form-col .form-row { margin-bottom: 1.25rem; }
+.term-edit-preview-col {
+    position: sticky;
+    top: 68px;
+    max-height: calc(100vh - 84px);
+    overflow: auto;
+}
+.term-edit-preview-col h3 {
+    font-family: var(--font-heading);
+    margin-top: 0;
+}
+.quill-wrap {
+    background: #fff;
+    border-radius: var(--radius);
+}
+.quill-wrap .ql-container { font-family: var(--font-sans); font-size: 1.125rem; min-height: 120px; }
+.quill-wrap .ql-editor { min-height: 120px; font-size: 1.125rem !important; font-family: var(--font-sans) !important; }
+.quill-sm .ql-container,
+.quill-sm .ql-editor { min-height: 60px; }
+.quill-wrap .ql-toolbar { border-top-left-radius: var(--radius); border-top-right-radius: var(--radius); }
+.quill-wrap .ql-container { border-bottom-left-radius: var(--radius); border-bottom-right-radius: var(--radius); }
+.qa-pair {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+.qa-pair input[type="text"] { margin-bottom: 0.4rem; font-weight: 500; }
+.qa-pair .remove-qa { font-size: 0.8125rem; color: var(--color-error); margin-top: 0.35rem; display: inline-block; }
+.qa-pair .remove-qa:hover { color: #b91c1c; }
+.link-block { margin-bottom: 0.5rem; }
+.link-block-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+.link-block-row input[type="text"],
+.link-block-row input[type="url"] { flex: 1; }
+.link-block-row .remove-link {
+    font-size: 1.25rem;
+    color: var(--color-muted);
+    line-height: 1;
+    padding: 0 0.25rem;
+}
+.link-block-row .remove-link:hover { color: var(--color-error); }
+.btn-delete {
+    background: #dc3545;
+    color: #fff;
+    border: 1px solid #dc3545;
+}
+.btn-delete:hover { background: #b91c1c; border-color: #b91c1c; }
+.md-guide {
+    background: #fff;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.md-guide h3 { font-size: 1.1875rem; margin-bottom: 0.5rem; }
+.preview-header {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--un-blue);
+}
 </style>
 
 <%- include('../partials/admin-footer') %>

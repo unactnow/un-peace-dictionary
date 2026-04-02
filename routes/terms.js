@@ -2,6 +2,8 @@ const express = require('express');
 const { Op } = require('sequelize');
 const { Term, AccordionSection, ExternalLink, TermRevision } = require('../models');
 const { ensureAuthenticated } = require('../middleware/auth');
+const { buildRevisionFieldDiff } = require('../helpers/snapshotDiff');
+const { PREDEFINED_SECTIONS, mapSectionsToSlots, extractWikiLinks } = require('../helpers/predefinedSections');
 
 const router = express.Router();
 
@@ -15,20 +17,38 @@ function slugify(text) {
     .replace(/^-|-$/g, '');
 }
 
-function parseSections(body) {
+function parseSections(body, termName) {
   const out = [];
-  if (Array.isArray(body.sections)) {
-    body.sections.forEach((s, i) => {
-      if (s && typeof s === 'object') {
-        const title = (s.title || '').trim();
-        const bodyText = (s.body || '').trim();
-        if (title || bodyText) {
-          out.push({ title: title || 'Section', body: bodyText, sortOrder: i });
-        }
-      }
+  const slots = body.section_slots;
+  if (slots && typeof slots === 'object') {
+    PREDEFINED_SECTIONS.forEach((def, i) => {
+      const text = (slots[def.key] || '').trim();
+      if (!text) return;
+      out.push({ title: def.title, body: text, sortOrder: i });
     });
   }
+  const qa = parseQaPairs(body, termName);
+  if (qa) out.push(qa);
   return out;
+}
+
+function parseQaPairs(body, termName) {
+  const questions = body.qa_question;
+  const answers = body.qa_answer;
+  if (!questions) return null;
+  const qArr = Array.isArray(questions) ? questions : [questions];
+  const aArr = Array.isArray(answers) ? answers : [answers || ''];
+  const pairs = [];
+  for (let i = 0; i < qArr.length; i++) {
+    const q = (qArr[i] || '').trim();
+    const a = (aArr[i] || '').trim();
+    if (q || a) pairs.push({ q, a });
+  }
+  if (pairs.length === 0) return null;
+  const title = termName
+    ? 'Questions people ask about \u201c' + termName.toLowerCase() + '\u201d'
+    : 'Questions people ask';
+  return { title, body: JSON.stringify(pairs), sortOrder: PREDEFINED_SECTIONS.length };
 }
 
 function parseLinks(body) {
@@ -45,11 +65,48 @@ function parseLinks(body) {
   return out;
 }
 
-function parseRelatedIds(body) {
-  const raw = body.relatedTermIds;
-  if (Array.isArray(raw)) return raw.filter(Boolean);
-  if (raw) return [raw];
-  return [];
+async function resolveRelatedFromContent(termId, allTextFields) {
+  const linked = new Set();
+  allTextFields.forEach((text) => {
+    extractWikiLinks(text).forEach((name) => linked.add(name));
+  });
+  if (linked.size === 0) return [];
+  const conditions = Array.from(linked).map((n) => ({ name: { [Op.like]: n } }));
+  const matches = await Term.findAll({
+    where: { [Op.or]: conditions, ...(termId ? { id: { [Op.ne]: termId } } : {}) },
+    attributes: ['id'],
+  });
+  return matches.map((t) => t.id);
+}
+
+function gatherAllText(body) {
+  const texts = [(body.lead_definition || '')];
+  const slots = body.section_slots;
+  if (slots && typeof slots === 'object') {
+    Object.values(slots).forEach((v) => { if (v) texts.push(v); });
+  }
+  const questions = body.qa_question;
+  const answers = body.qa_answer;
+  if (questions) {
+    const qArr = Array.isArray(questions) ? questions : [questions];
+    const aArr = Array.isArray(answers) ? answers : [answers || ''];
+    qArr.forEach((q) => { if (q) texts.push(q); });
+    aArr.forEach((a) => { if (a) texts.push(a); });
+  }
+  return texts;
+}
+
+function generateSearchKeywords(name, abbreviation, leadDef) {
+  const parts = new Set();
+  (name || '').toLowerCase().split(/\s+/).forEach((w) => { if (w) parts.add(w); });
+  if (abbreviation) {
+    parts.add(abbreviation.toLowerCase());
+    abbreviation.toLowerCase().split(/\s+/).forEach((w) => { if (w) parts.add(w); });
+  }
+  (leadDef || '').replace(/\[\[([^\]]+)\]\]/g, (_, raw) => {
+    raw.trim().toLowerCase().split(/\s+/).forEach((w) => { if (w) parts.add(w); });
+  });
+  return Array.from(parts).join(' ');
 }
 
 async function buildSnapshotObject(termId) {
@@ -92,6 +149,8 @@ async function loadAllTermsForSelect(excludeId) {
   });
 }
 
+/* ---- routes ---- */
+
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {
     const terms = await Term.findAll({ order: [['name', 'ASC']] });
@@ -106,13 +165,16 @@ router.get('/', ensureAuthenticated, async (req, res) => {
 router.get('/new', ensureAuthenticated, async (req, res) => {
   try {
     const allTerms = await loadAllTermsForSelect(null);
+    const emptySlots = {};
+    PREDEFINED_SECTIONS.forEach((s) => { emptySlots[s.key] = ''; });
     res.render('admin/term-edit', {
       title: 'New term',
       term: null,
-      sections: [{ title: '', body: '', sortOrder: 0 }],
-      externalLinks: [{ text: '', url: '', sortOrder: 0 }],
+      sectionSlots: emptySlots,
+      predefinedSections: PREDEFINED_SECTIONS,
+      qaPairs: [],
+      externalLinks: [],
       allTerms,
-      relatedIdList: [],
       revisions: [],
     });
   } catch (err) {
@@ -124,21 +186,15 @@ router.get('/new', ensureAuthenticated, async (req, res) => {
 
 router.post('/new', ensureAuthenticated, async (req, res) => {
   try {
-    const {
-      name,
-      abbreviation,
-      slug: slugInput,
-      pronunciation,
-      part_of_speech,
-      lead_definition,
-      search_keywords,
-    } = req.body;
-    const finalSlug = (slugInput || '').trim() || slugify(name);
+    const { name, abbreviation, pronunciation, part_of_speech, lead_definition, slug: formSlug } = req.body;
+    const isAdmin = req.user && req.user.role === 'admin';
+    const finalSlug = (isAdmin && formSlug && formSlug.trim()) ? slugify(formSlug.trim()) : slugify(name);
     const existing = await Term.findOne({ where: { slug: finalSlug } });
     if (existing) {
-      req.flash('error_msg', 'A term with that slug already exists.');
+      req.flash('error_msg', 'A term with that name already exists.');
       return res.redirect('/admin/terms/new');
     }
+    const keywords = generateSearchKeywords(name, abbreviation, lead_definition);
     const term = await Term.create({
       name: name.trim(),
       abbreviation: (abbreviation || '').trim(),
@@ -146,10 +202,10 @@ router.post('/new', ensureAuthenticated, async (req, res) => {
       pronunciation: (pronunciation || '').trim(),
       partOfSpeech: (part_of_speech || 'noun').trim(),
       leadDefinition: lead_definition || '',
-      searchKeywords: (search_keywords || '').trim(),
+      searchKeywords: keywords,
     });
 
-    const sections = parseSections(req.body);
+    const sections = parseSections(req.body, name.trim());
     for (const s of sections) {
       await AccordionSection.create({ ...s, termId: term.id });
     }
@@ -157,7 +213,7 @@ router.post('/new', ensureAuthenticated, async (req, res) => {
     for (const l of links) {
       await ExternalLink.create({ ...l, termId: term.id });
     }
-    const relIds = parseRelatedIds(req.body).filter((id) => id !== term.id);
+    const relIds = await resolveRelatedFromContent(term.id, gatherAllText(req.body));
     if (relIds.length > 0) {
       await term.setRelatedTerms(relIds);
     }
@@ -183,30 +239,29 @@ router.get('/:id/edit', ensureAuthenticated, async (req, res) => {
       req.flash('error_msg', 'Term not found.');
       return res.redirect('/admin/terms');
     }
-    const related = await term.getRelatedTerms({ attributes: ['id'] });
-    const relatedIdList = related.map((r) => r.id);
     const allTerms = await loadAllTermsForSelect(term.id);
     const revisions = await TermRevision.findAll({
       where: { termId: term.id },
       order: [['createdAt', 'DESC']],
       limit: 50,
     });
-    const sections =
-      term.sections && term.sections.length > 0
-        ? term.sections.map((s) => ({ title: s.title, body: s.body, sortOrder: s.sortOrder }))
-        : [{ title: '', body: '', sortOrder: 0 }];
+    const dbSections = term.sections
+      ? term.sections.map((s) => ({ title: s.title, body: s.body, sortOrder: s.sortOrder }))
+      : [];
+    const { slots: sectionSlots, qaPairs } = mapSectionsToSlots(dbSections);
     const externalLinks =
       term.externalLinks && term.externalLinks.length > 0
         ? term.externalLinks.map((l) => ({ text: l.text, url: l.url, sortOrder: l.sortOrder }))
-        : [{ text: '', url: '', sortOrder: 0 }];
+        : [];
 
     res.render('admin/term-edit', {
       title: 'Edit term',
       term,
-      sections,
+      sectionSlots,
+      predefinedSections: PREDEFINED_SECTIONS,
+      qaPairs,
       externalLinks,
       allTerms,
-      relatedIdList,
       revisions,
     });
   } catch (err) {
@@ -233,22 +288,16 @@ router.post('/:id/edit', ensureAuthenticated, async (req, res) => {
       });
     }
 
-    const {
-      name,
-      abbreviation,
-      slug: slugInput,
-      pronunciation,
-      part_of_speech,
-      lead_definition,
-      search_keywords,
-    } = req.body;
-    const finalSlug = (slugInput || '').trim() || slugify(name);
+    const { name, abbreviation, pronunciation, part_of_speech, lead_definition, slug: formSlug } = req.body;
+    const isAdmin = req.user && req.user.role === 'admin';
+    const finalSlug = (isAdmin && formSlug && formSlug.trim()) ? slugify(formSlug.trim()) : slugify(name);
     const clash = await Term.findOne({ where: { slug: finalSlug, id: { [Op.ne]: term.id } } });
     if (clash) {
-      req.flash('error_msg', 'Another term already uses that slug.');
+      req.flash('error_msg', 'Another term already uses that name.');
       return res.redirect(`/admin/terms/${term.id}/edit`);
     }
 
+    const keywords = generateSearchKeywords(name, abbreviation, lead_definition);
     await term.update({
       name: name.trim(),
       abbreviation: (abbreviation || '').trim(),
@@ -256,22 +305,30 @@ router.post('/:id/edit', ensureAuthenticated, async (req, res) => {
       pronunciation: (pronunciation || '').trim(),
       partOfSpeech: (part_of_speech || 'noun').trim(),
       leadDefinition: lead_definition || '',
-      searchKeywords: (search_keywords || '').trim(),
+      searchKeywords: keywords,
     });
 
-    await AccordionSection.destroy({ where: { termId: term.id } });
-    const sections = parseSections(req.body);
-    for (const s of sections) {
-      await AccordionSection.create({ ...s, termId: term.id });
+    const newSections = parseSections(req.body, name.trim());
+    const existingSections = await AccordionSection.findAll({ where: { termId: term.id } });
+    const existingHasContent = existingSections.some((s) => (s.body || '').trim().length > 0);
+    const newHasContent = newSections.some((s) => (s.body || '').trim().length > 0);
+    if (!existingHasContent || newHasContent) {
+      await AccordionSection.destroy({ where: { termId: term.id } });
+      for (const s of newSections) {
+        await AccordionSection.create({ ...s, termId: term.id });
+      }
     }
 
-    await ExternalLink.destroy({ where: { termId: term.id } });
-    const links = parseLinks(req.body);
-    for (const l of links) {
-      await ExternalLink.create({ ...l, termId: term.id });
+    const newLinks = parseLinks(req.body);
+    const existingLinks = await ExternalLink.findAll({ where: { termId: term.id } });
+    if (existingLinks.length === 0 || newLinks.length > 0) {
+      await ExternalLink.destroy({ where: { termId: term.id } });
+      for (const l of newLinks) {
+        await ExternalLink.create({ ...l, termId: term.id });
+      }
     }
 
-    const relIds = parseRelatedIds(req.body).filter((id) => id !== term.id);
+    const relIds = await resolveRelatedFromContent(term.id, gatherAllText(req.body));
     await term.setRelatedTerms(relIds);
 
     req.flash('success_msg', 'Term updated.');
@@ -293,6 +350,8 @@ router.post('/:id/delete', ensureAuthenticated, async (req, res) => {
   }
   res.redirect('/admin/terms');
 });
+
+/* ---- revisions ---- */
 
 router.get('/:id/revisions', ensureAuthenticated, async (req, res) => {
   try {
@@ -328,12 +387,14 @@ router.get('/:id/revisions/:revId', ensureAuthenticated, async (req, res) => {
       snapshot = {};
     }
     const current = await buildSnapshotObject(term.id);
+    const diffRows = buildRevisionFieldDiff(snapshot, current);
     res.render('admin/term-revision-view', {
       title: 'Revision',
       term,
       revision: rev,
       snapshot,
       current,
+      diffRows,
     });
   } catch (err) {
     console.error(err);
@@ -414,6 +475,120 @@ router.post('/:id/revisions/:revId/restore', ensureAuthenticated, async (req, re
     console.error(err);
     req.flash('error_msg', 'Failed to restore.');
     res.redirect(`/admin/terms/${req.params.id}/revisions`);
+  }
+});
+
+/* ---- JSON bulk export ---- */
+
+router.get('/json/export', ensureAuthenticated, async (req, res) => {
+  try {
+    const terms = await Term.findAll({
+      include: [
+        { model: AccordionSection, as: 'sections', separate: true, order: [['sortOrder', 'ASC']] },
+        { model: ExternalLink, as: 'externalLinks', separate: true, order: [['sortOrder', 'ASC']] },
+        { model: Term, as: 'relatedTerms', through: { attributes: [] }, required: false },
+      ],
+      order: [['name', 'ASC']],
+    });
+    const payload = terms.map((t) => ({
+      name: t.name,
+      abbreviation: t.abbreviation || '',
+      slug: t.slug,
+      pronunciation: t.pronunciation || '',
+      partOfSpeech: t.partOfSpeech || 'noun',
+      leadDefinition: t.leadDefinition || '',
+      searchKeywords: t.searchKeywords || '',
+      sections: (t.sections || []).map((s) => ({ title: s.title, body: s.body, sortOrder: s.sortOrder })),
+      externalLinks: (t.externalLinks || []).map((l) => ({ text: l.text, url: l.url, sortOrder: l.sortOrder })),
+      relatedSlugs: (t.relatedTerms || []).map((r) => r.slug),
+    }));
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="peace-dictionary-terms.json"');
+    res.send(JSON.stringify(payload, null, 2));
+  } catch (err) {
+    console.error(err);
+    req.flash('error_msg', 'Failed to export JSON.');
+    res.redirect('/admin/terms');
+  }
+});
+
+/* ---- JSON bulk import ---- */
+
+router.post('/json/import', ensureAuthenticated, express.json({ limit: '5mb' }), async (req, res) => {
+  try {
+    const data = req.body;
+    if (!Array.isArray(data)) {
+      return res.status(400).json({ error: 'Expected a JSON array of terms.' });
+    }
+
+    let created = 0;
+    let updated = 0;
+    const slugToId = {};
+
+    for (const item of data) {
+      if (!item.name || !item.slug) continue;
+      let term = await Term.findOne({ where: { slug: item.slug } });
+      if (term) {
+        await term.update({
+          name: item.name,
+          abbreviation: item.abbreviation || '',
+          pronunciation: item.pronunciation || '',
+          partOfSpeech: item.partOfSpeech || 'noun',
+          leadDefinition: item.leadDefinition || '',
+          searchKeywords: item.searchKeywords || '',
+        });
+        updated++;
+      } else {
+        term = await Term.create({
+          name: item.name,
+          slug: item.slug,
+          abbreviation: item.abbreviation || '',
+          pronunciation: item.pronunciation || '',
+          partOfSpeech: item.partOfSpeech || 'noun',
+          leadDefinition: item.leadDefinition || '',
+          searchKeywords: item.searchKeywords || '',
+        });
+        created++;
+      }
+      slugToId[item.slug] = term.id;
+
+      await AccordionSection.destroy({ where: { termId: term.id } });
+      for (let i = 0; i < (item.sections || []).length; i++) {
+        const s = item.sections[i];
+        await AccordionSection.create({
+          title: s.title || 'Section',
+          body: s.body || '',
+          sortOrder: s.sortOrder != null ? s.sortOrder : i,
+          termId: term.id,
+        });
+      }
+
+      await ExternalLink.destroy({ where: { termId: term.id } });
+      for (let i = 0; i < (item.externalLinks || []).length; i++) {
+        const l = item.externalLinks[i];
+        await ExternalLink.create({
+          text: l.text || '',
+          url: l.url || '',
+          sortOrder: l.sortOrder != null ? l.sortOrder : i,
+          termId: term.id,
+        });
+      }
+    }
+
+    for (const item of data) {
+      if (!item.slug || !Array.isArray(item.relatedSlugs) || item.relatedSlugs.length === 0) continue;
+      const termId = slugToId[item.slug];
+      if (!termId) continue;
+      const term = await Term.findByPk(termId);
+      if (!term) continue;
+      const relIds = item.relatedSlugs.map((s) => slugToId[s]).filter(Boolean);
+      await term.setRelatedTerms(relIds);
+    }
+
+    res.json({ ok: true, created, updated, total: data.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Import failed: ' + err.message });
   }
 });
 

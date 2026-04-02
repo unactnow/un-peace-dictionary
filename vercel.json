@@ -20,6 +20,10 @@
   ],
   "routes": [
     {
+      "src": "/robots.txt",
+      "dest": "/public/robots.txt"
+    },
+    {
       "src": "/(.*)",
       "dest": "/api/index.js"
     }
