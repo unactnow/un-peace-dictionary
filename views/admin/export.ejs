@@ -1,0 +1,43 @@
+<%- include('../partials/admin-head') %>
+
+<h2>Export HTML</h2>
+<p><strong><%= termCount %></strong> term(s) included. Generated at <%= new Date(generatedAt).toLocaleString() %>.</p>
+<p>
+    <button type="button" class="btn" id="copy-btn">Copy to clipboard</button>
+    <a class="btn" href="/export/download">Download .html</a>
+    <a href="/admin/terms">← Terms</a>
+</p>
+
+<label for="export-raw" class="hint">Full fragment for Drupal (paste into a text field)</label>
+<textarea readonly id="export-raw" rows="28" class="export-textarea"><%- htmlOutput %></textarea>
+
+<script>
+(function () {
+  var raw = document.getElementById('export-raw');
+  var btn = document.getElementById('copy-btn');
+  if (!raw || !btn) return;
+  btn.addEventListener('click', function () {
+    raw.select();
+    navigator.clipboard.writeText(raw.value).then(function () {
+      btn.textContent = 'Copied!';
+      setTimeout(function () { btn.textContent = 'Copy to clipboard'; }, 2000);
+    });
+  });
+})();
+</script>
+
+<style>
+.export-textarea {
+  width: 100%;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 6px;
+  max-height: 70vh;
+}
+</style>
+
+<%- include('../partials/admin-footer') %>

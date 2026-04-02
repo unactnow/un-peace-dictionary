@@ -1,0 +1,21 @@
+<%- include('../partials/admin-head') %>
+
+<p><a href="/admin/terms/<%= term.id %>/revisions">← Revisions</a></p>
+<h2>Revision from <%= new Date(revision.createdAt).toLocaleString() %></h2>
+
+<form action="/admin/terms/<%= term.id %>/revisions/<%= revision.id %>/restore" method="post" onsubmit="return confirm('Restore this version?');">
+    <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
+    <button type="submit" class="btn">Restore this version</button>
+</form>
+
+<hr>
+
+<h3>Snapshot (revision)</h3>
+<pre class="revision-json"><%= JSON.stringify(snapshot, null, 2) %></pre>
+
+<h3>Current (for comparison)</h3>
+<pre class="revision-json"><%= JSON.stringify(current, null, 2) %></pre>
+
+<%- include('../partials/admin-footer') %>
+
+<style>.revision-json { font-size: 0.75rem; overflow: auto; max-height: 40vh; background: #f9fafb; padding: 1rem; border-radius: 6px; }</style>

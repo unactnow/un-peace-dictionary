@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Log In</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="login-body">
+    <div class="login-form">
+        <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+        <div class="flash-messages">
+            <% success_msg.forEach(msg => { %>
+            <div class="flash flash-success"><%= msg %></div>
+            <% }) %>
+        </div>
+        <% } %>
+        <% if (typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+        <div class="flash-messages">
+            <% error_msg.forEach(msg => { %>
+            <div class="flash flash-error"><%= msg %></div>
+            <% }) %>
+        </div>
+        <% } %>
+        <% if (typeof error !== 'undefined' && error.length > 0) { %>
+        <div class="flash-messages">
+            <% error.forEach(msg => { %>
+            <div class="flash flash-error"><%= msg %></div>
+            <% }) %>
+        </div>
+        <% } %>
+
+        <h1>Log In</h1>
+        <form method="POST" action="/auth/login">
+            <input type="hidden" name="_csrf_token" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+            <div class="form-row">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autofocus>
+            </div>
+            <div class="form-row">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Log In</button>
+        </form>
+        <a href="/auth/forgot-password" class="forgot-link">Forgot password?</a>
+    </div>
+</body>
+</html>

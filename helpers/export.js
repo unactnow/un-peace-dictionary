@@ -1,0 +1,339 @@
+const fs = require('fs');
+const path = require('path');
+const { marked } = require('marked');
+
+const PD_CSS = fs.readFileSync(path.join(__dirname, 'static', 'peace-dictionary.css'), 'utf8');
+const PD_JS = fs.readFileSync(path.join(__dirname, 'static', 'peace-dictionary.js'), 'utf8');
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function letterBucket(name) {
+  const m = String(name).match(/[A-Za-z]/);
+  return m ? m[0].toUpperCase() : 'A';
+}
+
+function buildTermLookup(terms) {
+  const byLower = {};
+  terms.forEach((t) => {
+    byLower[t.name.trim().toLowerCase()] = t;
+  });
+  return byLower;
+}
+
+function resolveWikiLinks(markdown, termLookup) {
+  if (!markdown) return '';
+  return markdown.replace(/\[\[([^\]]+)\]\]/g, (match, rawName) => {
+    const key = rawName.trim().toLowerCase();
+    const term = termLookup[key];
+    if (term) {
+      return `<a href="#pd-${escapeHtml(term.slug)}">${escapeHtml(term.name)}</a>`;
+    }
+    return escapeHtml(rawName.trim());
+  });
+}
+
+function markdownToHtml(md, termLookup) {
+  const linked = resolveWikiLinks(md || '', termLookup);
+  return marked.parse(linked, { async: false });
+}
+
+function firstParagraphPlain(html) {
+  const m = String(html).match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+  if (!m) return '';
+  return m[1].replace(/<[^>]+>/g, '').trim();
+}
+
+function buildDataSearch(term) {
+  const parts = [
+    term.slug.replace(/-/g, ' '),
+    term.name.toLowerCase(),
+    (term.searchKeywords || '').toLowerCase(),
+  ];
+  const seen = new Set();
+  const out = [];
+  parts.join(' ').split(/\s+/).forEach((w) => {
+    if (w && !seen.has(w)) {
+      seen.add(w);
+      out.push(w);
+    }
+  });
+  return out.join(' ');
+}
+
+function extractFaqFromRenderedHtml(html) {
+  const faqs = [];
+  const re = /<p><strong>([^<]+)<\/strong><br\s*\/?>\s*([\s\S]*?)<\/p>/gi;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const q = m[1].trim();
+    const a = m[2].replace(/<[^>]+>/g, '').trim();
+    if (q && a) faqs.push({ question: q, answer: a });
+  }
+  return faqs;
+}
+
+function renderTermArticle(term, termLookup) {
+  const sections = (term.sections || []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
+  const links = (term.externalLinks || []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
+  const related = term.relatedTerms || [];
+
+  let titleHtml;
+  if (term.abbreviation) {
+    titleHtml = `<dfn><abbr title="${escapeHtml(term.abbreviation)}">${escapeHtml(term.name)}</abbr></dfn>`;
+  } else {
+    titleHtml = `<dfn>${escapeHtml(term.name)}</dfn>`;
+  }
+
+  let metaHtml;
+  if (term.abbreviation) {
+    metaHtml = `<p class="pd-entry-meta">${escapeHtml(term.abbreviation)} <span class="pd-pos">${escapeHtml(term.partOfSpeech || 'abbreviation')}</span></p>`;
+  } else {
+    const pron = term.pronunciation
+      ? `<span aria-label="pronunciation">${escapeHtml(term.pronunciation)}</span>`
+      : '';
+    metaHtml = `<p class="pd-entry-meta">${pron}${pron ? ' ' : ''}<span class="pd-pos">${escapeHtml(term.partOfSpeech || 'noun')}</span></p>`;
+  }
+
+  const leadMd = markdownToHtml(term.leadDefinition, termLookup);
+  let bodyInner = leadMd;
+
+  sections.forEach((sec) => {
+    const bodyHtml = markdownToHtml(sec.body, termLookup);
+    extractFaqFromRenderedHtml(bodyHtml);
+    bodyInner += `
+                    <details>
+                        <summary>${escapeHtml(sec.title)}</summary>
+                        <div class="pd-details-body">
+                            ${bodyHtml}
+                        </div>
+                    </details>`;
+  });
+
+  if (related.length > 0) {
+    const pills = related
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((r) => `<a href="#pd-${escapeHtml(r.slug)}">${escapeHtml(r.name)}</a>`)
+      .join('\n                                ');
+    bodyInner += `
+                    <details>
+                        <summary>Related terms</summary>
+                        <div class="pd-details-body">
+                            <div class="pd-related-terms">
+                                ${pills}
+                            </div>
+                        </div>
+                    </details>`;
+  }
+
+  if (links.length > 0) {
+    const lis = links
+      .map((l) => `<li><a href="${escapeHtml(l.url)}" rel="noopener">${escapeHtml(l.text)}</a></li>`)
+      .join('\n                                ');
+    bodyInner += `
+                    <details>
+                        <summary>Learn more</summary>
+                        <div class="pd-details-body pd-learn-more">
+                            <ul>
+                                ${lis}
+                            </ul>
+                        </div>
+                    </details>`;
+  }
+
+  return `<article class="pd-entry" id="pd-${escapeHtml(term.slug)}" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="${escapeHtml(term.name)}" data-search="${escapeHtml(buildDataSearch(term))}">
+                <h3 class="pd-entry-term" itemprop="name">${titleHtml}</h3>
+                ${metaHtml}
+                <div class="pd-entry-body" itemprop="description">
+                    ${bodyInner}
+                </div>
+            </article>`;
+}
+
+function buildJsonLd(terms, pageUrl, dateModified) {
+  const base = pageUrl.replace(/#.*$/, '');
+  const defined = terms.map((t) => {
+    const leadHtml = markdownToHtml(t.leadDefinition, buildTermLookup(terms));
+    const desc = firstParagraphPlain(leadHtml) || t.name;
+    return {
+      '@type': 'DefinedTerm',
+      name: t.name,
+      description: desc,
+      url: `${base}#pd-${t.slug}`,
+    };
+  });
+
+  const allFaqs = [];
+  const termLookup = buildTermLookup(terms);
+  terms.forEach((t) => {
+    (t.sections || []).forEach((sec) => {
+      const bodyHtml = markdownToHtml(sec.body, termLookup);
+      extractFaqFromRenderedHtml(bodyHtml).forEach((f) => allFaqs.push(f));
+    });
+  });
+
+  const ld = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'DefinedTermSet',
+      name: 'The Peace Dictionary',
+      description:
+        'A comprehensive glossary of peace and security terminology from the United Nations, covering key terms to help understand the language of diplomacy, peacebuilding, and conflict resolution.',
+      url: base,
+      mainEntityOfPage: {
+        '@type': 'WebPage',
+        '@id': base,
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'United Nations',
+        url: 'https://www.un.org',
+      },
+      inLanguage: 'en',
+      datePublished: '2026-04-01',
+      dateModified,
+      hasDefinedTerm: defined,
+    },
+  ];
+
+  if (allFaqs.length > 0) {
+    ld.push({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: allFaqs.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: f.answer,
+        },
+      })),
+    });
+  }
+
+  return JSON.stringify(ld);
+}
+
+function groupTermsByLetter(terms) {
+  const map = {};
+  terms.forEach((t) => {
+    const L = letterBucket(t.name);
+    if (!map[L]) map[L] = [];
+    map[L].push(t);
+  });
+  return map;
+}
+
+function generateDictionaryHTML(terms, settings = {}) {
+  const intro =
+    settings.dictionary_intro_text ||
+    'This is a first mock-up of the Peace Dictionary with sample content pulled from the climate site. It uses semantic HTML and microformatting to maximize SEO and GEO. The javascript populates its definition list based on the HTML markup so that definitions are only stored in one location and are easily added/edited by non-coders.';
+  const pageUrl =
+    settings.dictionary_page_url || 'https://www.un.org/en/peaceandsecurity/peace-dictionary';
+  const dateModified = new Date().toISOString().split('T')[0];
+
+  const sorted = terms.slice().sort((a, b) => a.name.localeCompare(b.name, 'en'));
+  const termLookup = buildTermLookup(sorted);
+  const byLetter = groupTermsByLetter(sorted);
+  const letters = Object.keys(byLetter).sort();
+
+  const jsonLd = buildJsonLd(sorted, pageUrl, dateModified);
+
+  const sectionsHtml = letters
+    .map((L) => {
+      const articles = byLetter[L]
+        .sort((a, b) => a.name.localeCompare(b.name, 'en'))
+        .map((t) => renderTermArticle(t, termLookup))
+        .join('\n\n            ');
+      return `        <!-- ${L} -->
+        <section class="pd-letter-group" id="pd-letter-${L}" aria-label="Terms starting with ${L}">
+            <h2 class="pd-letter-heading">${L}</h2>
+
+            ${articles}
+        </section>`;
+    })
+    .join('\n\n');
+
+  return `<!-- Peace Dictionary export -->
+<script id="pd-ld-json" type="application/ld+json">${jsonLd}</script>
+
+<link href="https://cdn.jsdelivr.net/gh/robertirish/un-peace-and-security-stylesheet@main/styles.css" rel="stylesheet">
+
+<style>
+${PD_CSS}
+</style>
+
+<div class="peace-dictionary" id="peace-dictionary">
+
+<div class="content-container no-padding-top">
+	<div class="image-banner full-width">
+		<figure class="image-banner-image"><img alt="The Peace Dictionary banner" src="https://www.un.org/sites/un2.un.org/files/peace-dictionary-banner.png">
+		</figure>
+	</div>
+</div>
+
+<div class="content-container full-width no-padding-top">
+    <h2 class="style-h1 align-center">The Peace Dictionary</h2>
+    <h3 class="style-h2 align-center heading-underline no-margin-top">Understanding the language of peace and security</h3>
+</div>
+
+<div class="content-container no-padding-top">
+    <p class="lede align-center">${escapeHtml(intro)}</p>
+</div>
+
+<div class="pd-search" role="search" aria-label="Search peace terms">
+    <div class="pd-search-inner">
+        <label for="pd-search-field">Find a term</label>
+        <div class="pd-search-input-wrap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="pd-search-field" class="pd-search-field" placeholder="e.g. peacebuilding, diplomacy, mediation&hellip;" autocomplete="off" aria-describedby="pd-search-info">
+            <button type="button" class="pd-search-clear" id="pd-search-clear" aria-label="Clear search">&times;</button>
+        </div>
+        <div id="pd-search-info" class="pd-search-info" aria-live="polite"></div>
+    </div>
+</div>
+
+<div class="content-container no-padding-top">
+    <nav class="pd-alpha-nav" aria-label="Alphabetical index" id="pd-alpha-nav"></nav>
+</div>
+
+<div class="content-container no-padding-top">
+    <div class="pd-terms" id="pd-terms" itemscope itemtype="https://schema.org/DefinedTermSet">
+        <meta itemprop="name" content="The Peace Dictionary">
+        <meta itemprop="description" content="A comprehensive glossary of key peace and security terms from the United Nations.">
+
+${sectionsHtml}
+
+    </div>
+
+    <div class="pd-no-results" id="pd-no-results" role="status">
+        <p>No terms found matching "<span class="pd-no-results-term" id="pd-no-results-term"></span>"</p>
+        <p class="pd-suggestion">Try a different spelling or browse the alphabetical index above.</p>
+    </div>
+</div>
+
+
+<a href="#peace-dictionary" class="pd-back-to-top">Return to top</a>
+
+</div>
+
+<script>
+${PD_JS}
+</script>
+`;
+}
+
+module.exports = {
+  generateDictionaryHTML,
+  escapeHtml,
+  buildTermLookup,
+  resolveWikiLinks,
+  markdownToHtml,
+};

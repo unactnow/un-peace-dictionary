@@ -1,0 +1,20 @@
+<%- include('../partials/admin-head') %>
+
+<h2>Settings</h2>
+
+<form method="POST">
+    <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
+    <% settings_rows.forEach(s => { %>
+    <div class="form-row">
+        <label for="<%= s.key %>"><%= s.label %></label>
+        <% if (s.type === 'textarea') { %>
+        <textarea id="<%= s.key %>" name="<%= s.key %>" rows="4"><%= s.value || '' %></textarea>
+        <% } else { %>
+        <input type="text" id="<%= s.key %>" name="<%= s.key %>" value="<%= s.value || '' %>">
+        <% } %>
+    </div>
+    <% }) %>
+    <button type="submit" class="btn">Save</button>
+</form>
+
+<%- include('../partials/admin-footer') %>

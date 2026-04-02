@@ -1,0 +1,333 @@
+    .peace-dictionary *, .peace-dictionary *::before, .peace-dictionary *::after { box-sizing: border-box; }
+
+    /* Search */
+    .peace-dictionary .pd-search {
+        position: sticky;
+        top: 35px;
+        z-index: 900;
+        background: #fff;
+        padding: 12px 20px;
+        width: 100%;
+        max-width: 100%;
+    }
+    .peace-dictionary .pd-search.pd-stuck {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .peace-dictionary .pd-search-inner {
+        max-width: 800px;
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+    }
+    .peace-dictionary .pd-search-inner label {
+        display: block;
+        font-size: 12px !important;
+        font-size: 1.2rem !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #666;
+        margin-bottom: 6px;
+    }
+    .peace-dictionary .pd-search-input-wrap {
+        position: relative;
+    }
+    .peace-dictionary .pd-search-input-wrap svg {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: #999;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: none;
+    }
+    .peace-dictionary .pd-search-field {
+        width: 100%;
+        padding: 12px 44px 12px 44px;
+        font-size: 18px !important;
+        font-size: 1.8rem !important;
+        font-family: inherit;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        outline: none;
+        transition: border-color 0.2s;
+        color: #454545;
+        background: #fff;
+    }
+    .peace-dictionary .pd-search-field:focus { border-color: #009edb; }
+    .peace-dictionary .pd-search-field::placeholder { color: #bbb; }
+    .peace-dictionary .pd-search-clear {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        font-size: 20px !important;
+        color: #999;
+        cursor: pointer;
+        padding: 4px 8px;
+        line-height: 1;
+        display: none;
+    }
+    .peace-dictionary .pd-search-clear:hover { color: #454545; }
+    .peace-dictionary .pd-search-info {
+        font-size: 14px !important;
+        font-size: 1.4rem !important;
+        color: #666;
+        margin-top: 8px;
+        min-height: 20px;
+    }
+
+    /* Alpha nav */
+    .peace-dictionary .pd-alpha-nav {
+        padding: 16px 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: center;
+    }
+    .peace-dictionary .pd-alpha-nav a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        font-size: 14px !important;
+        font-size: 1.4rem !important;
+        font-weight: 700;
+        text-decoration: none;
+        color: #009edb;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    .peace-dictionary .pd-alpha-nav a:hover,
+    .peace-dictionary .pd-alpha-nav a:focus {
+        background: #009edb;
+        color: #fff;
+        border-color: #009edb;
+    }
+    .peace-dictionary .pd-alpha-nav a.disabled {
+        display: none;
+    }
+
+    /* Terms container — div children of content-container don't get max-width from the parent rules */
+    .peace-dictionary .pd-terms {
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Letter group */
+    .peace-dictionary .pd-letter-group {
+        margin-top: 48px;
+        scroll-margin-top: 180px;
+    }
+    .peace-dictionary .pd-letter-heading {
+        font-size: 36px;
+        font-size: 3.6rem;
+        font-weight: 700;
+        color: #009edb;
+        padding-bottom: 8px;
+        border-bottom: 3px solid #009edb;
+        margin-bottom: 32px;
+    }
+
+    /* Dictionary entry */
+    .peace-dictionary .pd-entry {
+        margin-bottom: 48px;
+        padding-bottom: 48px;
+        border-bottom: 3px solid #ddd;
+        scroll-margin-top: 220px;
+    }
+    .peace-dictionary .pd-entry:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .peace-dictionary .pd-entry-term {
+        font-size: 28px;
+        font-size: 2.8rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 4px;
+        color: #454545;
+    }
+    .peace-dictionary .pd-entry-term dfn {
+        font-style: normal;
+    }
+    .peace-dictionary .pd-entry-meta {
+        color: #666;
+        margin-bottom: 16px;
+        font-style: italic;
+    }
+    .peace-dictionary .pd-entry-meta .pd-pos {
+        font-style: normal;
+        font-weight: 600;
+        color: #009edb;
+        text-transform: uppercase;
+        font-size: 13px !important;
+        font-size: 1.3rem !important;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+    }
+    .peace-dictionary .pd-entry-body p:last-child { margin-bottom: 0; }
+
+    /* Highlight */
+    .peace-dictionary mark {
+        background: #ffe066;
+        color: inherit;
+        padding: 1px 2px;
+        border-radius: 2px;
+    }
+
+    /* Accordion sections */
+    .peace-dictionary .pd-entry-body details {
+        margin-bottom: 0;
+    }
+    .peace-dictionary .pd-entry-body summary {
+        padding: 14px 0;
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #454545;
+        border-bottom: 1px solid #ddd;
+        transition: color 0.2s;
+    }
+    .peace-dictionary .pd-entry-body summary:hover {
+        color: #009edb;
+    }
+    .peace-dictionary .pd-entry-body summary::-webkit-details-marker { display: none; }
+    .peace-dictionary .pd-entry-body summary::after {
+        content: '+';
+        font-size: 20px;
+        font-weight: 400;
+        color: #009edb;
+        transition: transform 0.2s;
+    }
+    .peace-dictionary .pd-entry-body details[open] > summary::after {
+        content: '\2212';
+    }
+    .peace-dictionary .pd-entry-body details .pd-details-body {
+        padding: 16px 0;
+    }
+    .peace-dictionary .pd-entry-body details .pd-details-body ul {
+        padding-left: 20px;
+        margin: 8px 0;
+    }
+    .peace-dictionary .pd-entry-body details .pd-details-body li {
+        margin-bottom: 6px;
+    }
+    .peace-dictionary .pd-entry-body .pd-related-terms {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .peace-dictionary .pd-entry-body .pd-related-terms a {
+        display: inline-block;
+        width: auto !important;
+        padding: 4px 12px;
+        border: 1px solid #009edb;
+        border-radius: 16px;
+        color: #009edb;
+        text-decoration: none;
+        font-size: 14px !important;
+        transition: all 0.2s;
+    }
+    .peace-dictionary .pd-entry-body .pd-related-terms a:hover {
+        background: #009edb;
+        color: #fff;
+    }
+    .peace-dictionary .pd-entry-body .pd-learn-more a {
+        color: #009edb;
+        text-decoration: none;
+    }
+    .peace-dictionary .pd-entry-body .pd-learn-more a:hover {
+        text-decoration: underline;
+    }
+
+    /* Visibility */
+    .peace-dictionary .pd-entry.pd-hidden { display: none; }
+    .peace-dictionary .pd-letter-group.pd-hidden { display: none; }
+
+    /* No results */
+    .peace-dictionary .pd-no-results {
+        text-align: center;
+        padding: 60px 0;
+        display: none;
+    }
+    .peace-dictionary .pd-no-results p {
+        color: #666;
+    }
+    .peace-dictionary .pd-no-results .pd-no-results-term {
+        font-weight: 700;
+        color: #454545;
+    }
+    .peace-dictionary .pd-no-results .pd-suggestion {
+        margin-top: 12px;
+        color: #999;
+    }
+
+    /* Source line */
+    .peace-dictionary .pd-source {
+        padding: 40px 0;
+        text-align: center;
+        color: #999;
+    }
+    .peace-dictionary .pd-source p {
+        font-size: 14px !important;
+        font-size: 1.4rem !important;
+    }
+
+    /* Print */
+    @media print {
+        .peace-dictionary .pd-search,
+        .peace-dictionary .pd-alpha-nav { display: none !important; }
+        .peace-dictionary .pd-entry { break-inside: avoid; }
+    }
+
+    /* Focus ring */
+    .peace-dictionary :focus-visible {
+        outline: 3px solid #009edb;
+        outline-offset: 2px;
+    }
+
+    /* Back to top */
+    .peace-dictionary .pd-back-to-top {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+        padding: 10px 16px;
+        background: #009edb;
+        color: #fff !important;
+        font-size: 14px !important;
+        font-family: 'Roboto Condensed', 'Arial Narrow', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-decoration: none;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transition: background 0.2s;
+        width: auto !important;
+    }
+    .peace-dictionary .pd-back-to-top:hover {
+        background: #007ab8;
+    }
+    @media print {
+        .peace-dictionary .pd-back-to-top { display: none !important; }
+    }
+
+.pd-preview-wrap { max-height: 70vh; overflow: auto; border: 1px solid #e5e7eb; border-radius: 6px; padding: 1rem; background: #fff; }

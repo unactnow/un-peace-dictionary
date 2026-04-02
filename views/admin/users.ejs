@@ -1,0 +1,61 @@
+<%- include('../partials/admin-head') %>
+
+<h2>Users</h2>
+
+<table class="admin-table">
+    <tr>
+        <th>Username</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th></th>
+    </tr>
+    <% users.forEach(u => { %>
+    <tr>
+        <td><%= u.username %></td>
+        <td><%= u.name || '—' %></td>
+        <td><%= u.email %></td>
+        <td><%= u.role %></td>
+        <td>
+            <% if (u.id !== user.id) { %>
+            <form method="POST" action="/admin/users/<%= u.id %>/delete" style="display:inline"
+                  onsubmit="return confirm('Delete this user?')">
+                <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
+                <button type="submit" class="link-btn btn-danger">Delete</button>
+            </form>
+            <% } %>
+        </td>
+    </tr>
+    <% }) %>
+</table>
+
+<h3>Add User</h3>
+<form method="POST" action="/admin/users/add" style="max-width: 400px;">
+    <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
+    <div class="form-row">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+    </div>
+    <div class="form-row">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required>
+    </div>
+    <div class="form-row">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+    </div>
+    <div class="form-row">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required minlength="6">
+    </div>
+    <div class="form-row">
+        <label for="role">Role</label>
+        <select id="role" name="role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+        </select>
+    </div>
+    <button type="submit" class="btn">Add User</button>
+</form>
+
+<%- include('../partials/admin-footer') %>
