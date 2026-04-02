@@ -29,7 +29,7 @@
     <% }) %>
 </table>
 
-<h3>Add User</h3>
+<h3>Add user</h3>
 <form method="POST" action="/admin/users/add" style="max-width: 400px;">
     <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
     <div class="form-row">
@@ -55,7 +55,7 @@
             <option value="admin">Admin</option>
         </select>
     </div>
-    <button type="submit" class="btn">Add User</button>
+    <button type="submit" class="btn">Add user</button>
 </form>
 
 <%- include('../partials/admin-footer') %>
