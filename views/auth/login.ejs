@@ -14,6 +14,12 @@
 </head>
 <body class="login-body">
     <div class="login-form">
+        <div class="login-header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/UN_emblem_blue.svg" alt="UN" width="36" height="36">
+            <h1>UN Peace Dictionary</h1>
+        </div>
+        <p class="login-subtitle">Sign in to your account</p>
+
         <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
         <div class="flash-messages">
             <% success_msg.forEach(msg => { %>
@@ -36,7 +42,6 @@
         </div>
         <% } %>
 
-        <h1>Log In</h1>
         <form method="POST" action="/auth/login">
             <input type="hidden" name="_csrf_token" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
             <div class="form-row">
@@ -47,7 +52,7 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
             </div>
-            <button type="submit">Log In</button>
+            <button type="submit">Sign In</button>
         </form>
         <a href="/auth/forgot-password" class="forgot-link">Forgot password?</a>
     </div>
