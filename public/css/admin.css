@@ -387,12 +387,31 @@ button[type="submit"]:hover { background: var(--un-blue-dark); }
     box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 
+.login-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.login-header img {
+    flex-shrink: 0;
+}
+
 .login-form h1 {
     font-family: var(--font-heading);
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     font-weight: 600;
-    margin-bottom: 1.75rem;
+    margin: 0;
     color: var(--un-blue);
+}
+
+.login-subtitle {
+    text-align: center;
+    color: var(--color-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
 }
 
 .login-form .form-row { margin-bottom: 1rem; }
