@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
 const passport = require('passport');
 const flash = require('connect-flash');
 const helmet = require('helmet');
@@ -31,7 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(session({
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'fallback-secret-key',
   resave: false,
   saveUninitialized: false,
@@ -42,7 +43,27 @@ app.use(session({
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000,
   },
-}));
+};
+
+if (process.env.DATABASE_URL) {
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || !!process.env.VERCEL_URL;
+  const pgSessionOpts = {
+    conString: process.env.DATABASE_URL,
+    tableName: 'session',
+    createTableIfMissing: true,
+  };
+  if (isVercel) {
+    const { Pool } = require('@neondatabase/serverless');
+    pgSessionOpts.pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    delete pgSessionOpts.conString;
+    pgSessionOpts.pruneSessionInterval = false;
+  } else {
+    pgSessionOpts.pruneSessionInterval = 60 * 15;
+  }
+  sessionConfig.store = new pgSession(pgSessionOpts);
+}
+
+app.use(session(sessionConfig));
 
 require('./config/passport')(passport);
 app.use(passport.initialize());
