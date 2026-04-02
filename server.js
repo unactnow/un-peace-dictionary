@@ -6,7 +6,7 @@ const flash = require('connect-flash');
 const helmet = require('helmet');
 const path = require('path');
 const crypto = require('crypto');
-const { marked } = require('marked');
+const { marked } = require('./helpers/markedConfig');
 const { sequelize, Setting } = require('./models');
 
 const app = express();
@@ -55,6 +55,10 @@ app.locals.renderMarkdown = (text) => (text ? marked.parse(text) : '');
 app.use((req, res, next) => {
   if (!req.session.csrfToken) {
     req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+    return req.session.save(() => {
+      res.locals.csrfToken = req.session.csrfToken;
+      next();
+    });
   }
   res.locals.csrfToken = req.session.csrfToken;
 

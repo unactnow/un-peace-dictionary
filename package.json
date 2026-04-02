@@ -1,7 +1,7 @@
 {
   "name": "peace-dictionary-cms",
   "version": "1.0.0",
-  "description": "Starting-point Express template with Vercel/Railway deployment",
+  "description": "Peace Dictionary CMS — Express, Vercel, Neon",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

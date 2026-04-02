@@ -153,8 +153,8 @@
         padding-bottom: 0;
     }
     .peace-dictionary .pd-entry-term {
-        font-size: 28px;
-        font-size: 2.8rem;
+        font-size: 20px;
+        font-size: 1.35rem;
         font-weight: 700;
         line-height: 1.2;
         margin-bottom: 4px;
@@ -169,12 +169,12 @@
         font-style: italic;
     }
     .peace-dictionary .pd-entry-meta .pd-pos {
+        font-family: 'Roboto Condensed', var(--font-heading, sans-serif);
         font-style: normal;
-        font-weight: 600;
+        font-weight: 700;
         color: #009edb;
         text-transform: uppercase;
-        font-size: 13px !important;
-        font-size: 1.3rem !important;
+        font-size: 0.85rem;
         letter-spacing: 0.5px;
         margin-left: 8px;
     }
@@ -330,4 +330,60 @@
         .peace-dictionary .pd-back-to-top { display: none !important; }
     }
 
-.pd-preview-wrap { max-height: 70vh; overflow: auto; border: 1px solid #e5e7eb; border-radius: 6px; padding: 1rem; background: #fff; }
+/* Preview scope */
+.pd-preview .peace-dictionary {
+  max-width: 100%;
+  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #333;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.pd-preview .peace-dictionary p {
+  margin: 0 0 12px;
+}
+.pd-preview .peace-dictionary ul,
+.pd-preview .peace-dictionary ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+.pd-preview .peace-dictionary li {
+  margin-bottom: 6px;
+}
+
+/* Inline body links — normal link style */
+.pd-preview .pd-entry-body a[href^="#pd-"] {
+  color: #009edb;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 158, 219, 0.3);
+  transition: border-color 0.15s;
+}
+.pd-preview .pd-entry-body a[href^="#pd-"]:hover {
+  border-bottom-color: #009edb;
+}
+
+/* Related terms pills — scoped to the related terms container only */
+.pd-preview .pd-related-terms a[href^="#pd-"] {
+  display: inline-block;
+  width: auto !important;
+  padding: 4px 12px;
+  border: 1px solid #009edb;
+  border-bottom: 1px solid #009edb;
+  border-radius: 16px;
+  color: #009edb;
+  text-decoration: none;
+  font-size: 14px !important;
+  margin: 2px 4px 2px 0;
+  transition: background 0.15s;
+}
+.pd-preview .pd-related-terms a[href^="#pd-"]:hover {
+  background: #e6f5fc;
+}
+
+.pd-preview-wrap {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: #fff;
+}

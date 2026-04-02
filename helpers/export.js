@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { marked } = require('marked');
+const { marked } = require('./markedConfig');
 
 const PD_CSS = fs.readFileSync(path.join(__dirname, 'static', 'peace-dictionary.css'), 'utf8');
 const PD_JS = fs.readFileSync(path.join(__dirname, 'static', 'peace-dictionary.js'), 'utf8');
@@ -39,9 +39,37 @@ function resolveWikiLinks(markdown, termLookup) {
   });
 }
 
+function isHtml(text) {
+  return /^\s*</.test(text || '');
+}
+
+function cleanQuillListMarkup(html) {
+  return html
+    .replace(/<ol[^>]*>([\s\S]*?)<\/ol>/g, (match, inner) => {
+      if (/data-list="bullet"/.test(inner)) {
+        const cleaned = inner.replace(/\s*(data-list|class)="[^"]*"/g, '');
+        return '<ul>' + cleaned + '</ul>';
+      }
+      return match.replace(/\s*(data-list|class)="[^"]*"/g, '');
+    })
+    .replace(/<span\s+style="[^"]*">([\s\S]*?)<\/span>/g, '$1')
+    .replace(/<span\s+class="[^"]*">([\s\S]*?)<\/span>/g, '$1')
+    .replace(/<span>([\s\S]*?)<\/span>/g, '$1')
+    .replace(/<p>\s*<br\s*\/?>\s*<\/p>/g, '')
+    .replace(/<p>\s*<\/p>/g, '')
+    .replace(/<p>&nbsp;<\/p>/g, '')
+    .replace(/(<br\s*\/?>){2,}/g, '<br>');
+}
+
+function contentToHtml(content, termLookup) {
+  if (!content) return '';
+  const resolved = resolveWikiLinks(content, termLookup);
+  if (isHtml(content)) return cleanQuillListMarkup(resolved);
+  return marked.parse(resolved, { async: false });
+}
+
 function markdownToHtml(md, termLookup) {
-  const linked = resolveWikiLinks(md || '', termLookup);
-  return marked.parse(linked, { async: false });
+  return contentToHtml(md, termLookup);
 }
 
 function firstParagraphPlain(html) {
@@ -105,13 +133,27 @@ function renderTermArticle(term, termLookup) {
   let bodyInner = leadMd;
 
   sections.forEach((sec) => {
-    const bodyHtml = markdownToHtml(sec.body, termLookup);
-    extractFaqFromRenderedHtml(bodyHtml);
+    let sectionBodyHtml;
+    const isQa = (sec.title || '').toLowerCase().startsWith('questions people ask');
+    if (isQa) {
+      try {
+        const pairs = JSON.parse(sec.body);
+        if (Array.isArray(pairs) && pairs.length > 0) {
+          sectionBodyHtml = pairs.map((p) => {
+            const aHtml = contentToHtml(p.a || '', termLookup);
+            return `<p><strong>${escapeHtml(p.q || '')}</strong></p>\n                            ${aHtml}`;
+          }).join('\n                            ');
+        }
+      } catch (e) { /* not JSON, fall through */ }
+    }
+    if (!sectionBodyHtml) {
+      sectionBodyHtml = contentToHtml(sec.body, termLookup);
+    }
     bodyInner += `
                     <details>
                         <summary>${escapeHtml(sec.title)}</summary>
                         <div class="pd-details-body">
-                            ${bodyHtml}
+                            ${sectionBodyHtml}
                         </div>
                     </details>`;
   });
@@ -174,8 +216,21 @@ function buildJsonLd(terms, pageUrl, dateModified) {
   const termLookup = buildTermLookup(terms);
   terms.forEach((t) => {
     (t.sections || []).forEach((sec) => {
-      const bodyHtml = markdownToHtml(sec.body, termLookup);
-      extractFaqFromRenderedHtml(bodyHtml).forEach((f) => allFaqs.push(f));
+      const isQa = (sec.title || '').toLowerCase().startsWith('questions people ask');
+      if (isQa) {
+        try {
+          const pairs = JSON.parse(sec.body);
+          if (Array.isArray(pairs)) {
+            pairs.forEach((p) => {
+              if (p.q && p.a) allFaqs.push({ question: p.q, answer: p.a });
+            });
+          }
+        } catch (e) { /* not JSON */ }
+      }
+      if (!isQa) {
+        const bodyHtml = markdownToHtml(sec.body, termLookup);
+        extractFaqFromRenderedHtml(bodyHtml).forEach((f) => allFaqs.push(f));
+      }
     });
   });
 

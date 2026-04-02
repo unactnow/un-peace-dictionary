@@ -7,7 +7,7 @@
  */
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
-const { sequelize, User, Setting } = require('../models');
+const { sequelize, User, Setting, Term, AccordionSection, ExternalLink } = require('../models');
 
 async function seed() {
   await sequelize.sync();
@@ -28,7 +28,7 @@ async function seed() {
   }
 
   const defaults = [
-    { key: 'site_name', value: 'Peace Dictionary CMS', label: 'Site Name', type: 'text' },
+    { key: 'site_name', value: 'UN Peace Dictionary', label: 'Site Name', type: 'text' },
     { key: 'tagline', value: '', label: 'Tagline', type: 'text' },
     { key: 'footer_text', value: '', label: 'Footer Text', type: 'text' },
     { key: 'analytics_code', value: '', label: 'Analytics Code', type: 'textarea' },
@@ -50,6 +50,45 @@ async function seed() {
     await Setting.findOrCreate({ where: { key: d.key }, defaults: d });
   }
   console.log('Default settings seeded.');
+
+  const termCount = await Term.count();
+  if (termCount === 0) {
+    const peacebuilding = await Term.create({
+      name: 'Peacebuilding',
+      abbreviation: '',
+      slug: 'peacebuilding',
+      pronunciation: '/ˈpiːsˌbɪldɪŋ/',
+      partOfSpeech: 'noun',
+      leadDefinition:
+        'Activities and structures that **prevent**, **reduce**, or **transform** violence and support lasting peace.',
+      searchKeywords: 'peacebuilding, peace, conflict',
+    });
+    await AccordionSection.create({
+      termId: peacebuilding.id,
+      title: 'In simple terms',
+      body: 'Efforts to help societies recover from conflict and avoid returning to it.',
+      sortOrder: 0,
+    });
+    const prevention = await Term.create({
+      name: 'Conflict prevention',
+      abbreviation: '',
+      slug: 'conflict-prevention',
+      pronunciation: '',
+      partOfSpeech: 'noun',
+      leadDefinition:
+        'Measures to identify and address causes of conflict before violence erupts. See also [[Peacebuilding]].',
+      searchKeywords: 'prevention, conflict',
+    });
+    await ExternalLink.create({
+      termId: prevention.id,
+      text: 'UN Peace and Security',
+      url: 'https://www.un.org/en/peaceandsecurity',
+      sortOrder: 0,
+    });
+    await peacebuilding.setRelatedTerms([prevention.id]);
+    await prevention.setRelatedTerms([peacebuilding.id]);
+    console.log('Sample terms seeded (peacebuilding, conflict-prevention).');
+  }
 
   process.exit(0);
 }

@@ -2,20 +2,69 @@
 
 <p><a href="/admin/terms/<%= term.id %>/revisions">← Revisions</a></p>
 <h2>Revision from <%= new Date(revision.createdAt).toLocaleString() %></h2>
+<p class="hint">Revised by: <%= revision.revisedBy || '—' %></p>
 
-<form action="/admin/terms/<%= term.id %>/revisions/<%= revision.id %>/restore" method="post" onsubmit="return confirm('Restore this version?');">
+<form action="/admin/terms/<%= term.id %>/revisions/<%= revision.id %>/restore" method="post" onsubmit="return confirm('Restore this version? Current content will be saved as a new revision first.');" style="margin-bottom: 1.5rem;">
     <input type="hidden" name="_csrf_token" value="<%= csrfToken %>">
     <button type="submit" class="btn">Restore this version</button>
 </form>
 
-<hr>
+<h3>Compare: snapshot vs current</h3>
+<table class="admin-table diff-table">
+    <thead>
+        <tr>
+            <th>Field</th>
+            <th>Snapshot (this revision)</th>
+            <th>Current</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% diffRows.forEach(function (row) { %>
+        <tr class="<%= row.changed ? 'diff-changed' : 'diff-same' %>">
+            <td><strong><%= row.label %></strong></td>
+            <td><pre class="diff-cell"><%= row.before %></pre></td>
+            <td><pre class="diff-cell"><%= row.after %></pre></td>
+        </tr>
+        <% }) %>
+    </tbody>
+</table>
 
-<h3>Snapshot (revision)</h3>
-<pre class="revision-json"><%= JSON.stringify(snapshot, null, 2) %></pre>
-
-<h3>Current (for comparison)</h3>
-<pre class="revision-json"><%= JSON.stringify(current, null, 2) %></pre>
+<details style="margin-top: 2rem;">
+    <summary>Raw JSON</summary>
+    <h4>Snapshot</h4>
+    <pre class="revision-json"><%= JSON.stringify(snapshot, null, 2) %></pre>
+    <h4>Current</h4>
+    <pre class="revision-json"><%= JSON.stringify(current, null, 2) %></pre>
+</details>
 
 <%- include('../partials/admin-footer') %>
 
-<style>.revision-json { font-size: 0.75rem; overflow: auto; max-height: 40vh; background: #f9fafb; padding: 1rem; border-radius: 6px; }</style>
+<style>
+.diff-table { table-layout: fixed; }
+.diff-table th:first-child { width: 140px; }
+.diff-table .diff-changed { background: #fffef5; border-left: 3px solid #f0ad4e; }
+.diff-table .diff-same { background: var(--color-surface); }
+.diff-cell {
+  font-size: 0.8125rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+  overflow: auto;
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", monospace;
+  padding: 0.5rem;
+  background: var(--color-bg);
+  border-radius: 4px;
+}
+.revision-json {
+  font-size: 0.8125rem;
+  overflow: auto;
+  max-height: 50vh;
+  background: #f8f9fa;
+  color: var(--color-text);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  font-family: ui-monospace, "SF Mono", monospace;
+}
+</style>

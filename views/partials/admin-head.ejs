@@ -4,14 +4,16 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>Peace Dictionary CMS — <%= typeof title !== 'undefined' ? title : 'Dashboard' %></title>
+    <title>UN Peace Dictionary — <%= typeof title !== 'undefined' ? title : 'Dashboard' %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/admin.css">
-    <link rel="stylesheet" href="/css/peace-dictionary-preview.css">
     <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
 </head>
 <body>
     <header class="admin-header">
-        <a href="/admin" class="admin-logo">Peace Dictionary CMS</a>
+        <a href="/admin" class="admin-logo"><img src="/img/un-logo.png" alt="UN" class="admin-logo-icon">UN Peace Dictionary</a>
         <nav class="admin-nav">
             <a href="/admin/terms">Terms</a>
             <a href="/export">Export</a>
