@@ -111,8 +111,7 @@ function generateSearchKeywords(name, abbreviation, allTextFields) {
   }
   allTextFields.forEach((text) => {
     (text || '').replace(/\[\[([^\]]+)\]\]/g, (_, raw) => {
-      const termKey = raw.includes('|') ? raw.split('|')[0] : raw;
-      termKey.trim().toLowerCase().split(/\s+/).forEach((w) => { if (w) parts.add(w); });
+      raw.trim().toLowerCase().split(/\s+/).forEach((w) => { if (w) parts.add(w); });
     });
   });
   return Array.from(parts).join(' ');

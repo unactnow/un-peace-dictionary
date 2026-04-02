@@ -55,17 +55,9 @@ function fuzzyMatchTerm(key, termLookup) {
 function resolveWikiLinks(markdown, termLookup) {
   if (!markdown) return '';
   return markdown.replace(/\[\[([^\]]+)\]\]/g, (match, rawContent) => {
-    let termKey, displayText;
-    if (rawContent.includes('|')) {
-      const parts = rawContent.split('|');
-      termKey = parts[0].trim().toLowerCase();
-      displayText = parts.slice(1).join('|').trim();
-    } else {
-      termKey = rawContent.trim().toLowerCase();
-      displayText = null;
-    }
+    const label = rawContent.trim();
+    const termKey = label.toLowerCase();
     const term = fuzzyMatchTerm(termKey, termLookup);
-    const label = displayText || rawContent.trim();
     if (term) {
       return `<a href="#pd-${escapeHtml(term.slug)}">${escapeHtml(label)}</a>`;
     }
