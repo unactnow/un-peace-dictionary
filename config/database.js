@@ -10,9 +10,6 @@ const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || 
 let sequelize;
 
 if (isVercel) {
-  const { neonConfig } = require('@neondatabase/serverless');
-  neonConfig.fetchConnectionCache = true;
-
   sequelize = new Sequelize(dbUrl, {
     dialect: 'postgres',
     dialectModule: require('@neondatabase/serverless'),
