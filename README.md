@@ -1,4 +1,4 @@
-# Peace Dictionary CMS
+# UN Peace Dictionary
 
 Internal CMS for managing the UN Peace & Security Dictionary. Authors create and edit glossary terms with markdown content, accordion sections, wiki-links between terms, and external references. The export feature generates a single Drupal-ready HTML fragment with semantic markup.
 
@@ -66,7 +66,7 @@ Internal CMS for managing the UN Peace & Security Dictionary. Authors create and
 ## Local Development
 
 ```bash
-cd peace-dictionary-cms
+cd un-peace-dictionary
 npm install
 cp .env.example .env
 npm run seed     # creates admin user + sample terms
