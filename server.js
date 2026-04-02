@@ -47,20 +47,16 @@ const sessionConfig = {
 
 if (process.env.DATABASE_URL) {
   const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || !!process.env.VERCEL_URL;
-  const pgSessionOpts = {
-    conString: process.env.DATABASE_URL,
+  const { Pool } = require('pg');
+  sessionConfig.store = new pgSession({
+    pool: new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    }),
     tableName: 'session',
     createTableIfMissing: true,
-  };
-  if (isVercel) {
-    const { Pool } = require('@neondatabase/serverless');
-    pgSessionOpts.pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    delete pgSessionOpts.conString;
-    pgSessionOpts.pruneSessionInterval = false;
-  } else {
-    pgSessionOpts.pruneSessionInterval = 60 * 15;
-  }
-  sessionConfig.store = new pgSession(pgSessionOpts);
+    pruneSessionInterval: isVercel ? false : 60 * 15,
+  });
 }
 
 app.use(session(sessionConfig));
@@ -76,7 +72,8 @@ app.locals.renderMarkdown = (text) => (text ? marked.parse(text) : '');
 app.use((req, res, next) => {
   if (!req.session.csrfToken) {
     req.session.csrfToken = crypto.randomBytes(32).toString('hex');
-    return req.session.save(() => {
+    return req.session.save((err) => {
+      if (err) console.error('Session save error:', err.message);
       res.locals.csrfToken = req.session.csrfToken;
       next();
     });
