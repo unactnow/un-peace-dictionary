@@ -1,5 +1,5 @@
 {
-  "name": "peace-dictionary-cms",
+  "name": "un-peace-dictionary",
   "version": "1.0.0",
   "description": "Peace Dictionary CMS — Express, Vercel, Neon",
   "main": "server.js",
