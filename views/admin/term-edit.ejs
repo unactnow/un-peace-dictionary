@@ -97,7 +97,7 @@
     <div class="term-edit-preview-col">
         <div class="md-guide">
             <h3 style="margin-top:0;">Formatting tips</h3>
-            <p class="hint" style="margin:0;">Use the toolbar for bold, italic, links, and lists. Type <code>[[Term Name]]</code> to link to another dictionary term (fuzzy matching finds the closest match). Use <code>[[Term Name|display text]]</code> to control the link text. These automatically create cross-references and populate the Related terms section.</p>
+            <p class="hint" style="margin:0;">Use the toolbar for bold, italic, links, and lists. Type <code>[[Term Name]]</code> to link to another dictionary term (fuzzy matching finds the closest match). The text you type inside the brackets is kept as the link text. These automatically create cross-references and populate the Related terms section.</p>
         </div>
 
         <div class="preview-header">Term preview</div>
@@ -324,7 +324,7 @@
     var found = {};
     var all = getAllContent().replace(/<[^>]*>/g, '');
     all.replace(/\[\[([^\]]+)\]\]/g, function (_, raw) {
-      var termKey = raw.indexOf('|') !== -1 ? raw.split('|')[0].trim().toLowerCase() : raw.trim().toLowerCase();
+      var termKey = raw.trim().toLowerCase();
       var match = fuzzyLookup(termKey);
       if (match) found[match.slug] = match;
     });
@@ -343,17 +343,9 @@
     if (wikiMatches.length === 0) return html;
     var result = html;
     wikiMatches.forEach(function (raw) {
-      var termKey, displayText;
-      if (raw.indexOf('|') !== -1) {
-        var parts = raw.split('|');
-        termKey = parts[0].trim().toLowerCase();
-        displayText = parts.slice(1).join('|').trim();
-      } else {
-        termKey = raw.trim().toLowerCase();
-        displayText = null;
-      }
+      var label = raw.trim();
+      var termKey = label.toLowerCase();
       var t = fuzzyLookup(termKey);
-      var label = displayText || raw.trim();
       var linkHtml = t
         ? '<a href="#pd-' + escapeHtml(t.slug) + '">' + escapeHtml(label) + '</a>'
         : escapeHtml(label);

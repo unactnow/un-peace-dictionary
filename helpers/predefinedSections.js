@@ -39,7 +39,7 @@ function extractWikiLinks(text) {
   const found = new Set();
   if (!text) return found;
   text.replace(/\[\[([^\]]+)\]\]/g, (_, raw) => {
-    const termKey = raw.includes('|') ? raw.split('|')[0].trim().toLowerCase() : raw.trim().toLowerCase();
+    const termKey = raw.trim().toLowerCase();
     found.add(termKey);
   });
   return found;
