@@ -1,37 +1,32 @@
 const { Sequelize } = require('sequelize');
-const path = require('path');
+
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) {
+  throw new Error('DATABASE_URL environment variable is required');
+}
+
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || !!process.env.VERCEL_URL;
 
 let sequelize;
 
-const dbUrl = process.env.DATABASE_URL;
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL === 'true' || !!process.env.VERCEL_URL;
+if (isVercel) {
+  const { neonConfig } = require('@neondatabase/serverless');
+  neonConfig.fetchConnectionCache = true;
 
-if (dbUrl && (dbUrl.startsWith('postgresql') || dbUrl.startsWith('postgres'))) {
-  if (isVercel) {
-    const { neonConfig } = require('@neondatabase/serverless');
-    neonConfig.fetchConnectionCache = true;
-
-    sequelize = new Sequelize(dbUrl, {
-      dialect: 'postgres',
-      dialectModule: require('@neondatabase/serverless'),
-      logging: false,
-      dialectOptions: { ssl: true },
-      pool: { max: 1, min: 0, idle: 0, acquire: 3000 },
-    });
-  } else {
-    sequelize = new Sequelize(dbUrl, {
-      dialect: 'postgres',
-      logging: false,
-      dialectOptions: {
-        ssl: { require: true, rejectUnauthorized: false },
-      },
-    });
-  }
-} else {
-  sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: path.join(__dirname, '..', 'database.sqlite'),
+  sequelize = new Sequelize(dbUrl, {
+    dialect: 'postgres',
+    dialectModule: require('@neondatabase/serverless'),
     logging: false,
+    dialectOptions: { ssl: true },
+    pool: { max: 1, min: 0, idle: 0, acquire: 3000 },
+  });
+} else {
+  sequelize = new Sequelize(dbUrl, {
+    dialect: 'postgres',
+    logging: false,
+    dialectOptions: {
+      ssl: { require: true, rejectUnauthorized: false },
+    },
   });
 }
 
