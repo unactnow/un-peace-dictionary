@@ -6,13 +6,13 @@
     <div class="stat-card">
         <span class="stat-num"><%= termCount %></span>
         <span class="stat-label">Terms</span>
-        <a href="/admin/terms">manage terms →</a>
+        <a href="/admin/terms">Manage terms →</a>
     </div>
     <div class="stat-card">
         <span class="stat-num"><%= userCount %></span>
         <span class="stat-label">Users</span>
         <% if (user && user.role === 'admin') { %>
-        <a href="/admin/users">manage users →</a>
+        <a href="/admin/users">Manage users →</a>
         <% } %>
     </div>
     <% if (recentTerm) { %>
