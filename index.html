@@ -1,0 +1,1339 @@
+<!-- data placeholder populated from the HTML definitions below -->
+<script id="pd-ld-json" type="application/ld+json">{}</script>
+
+<link href="https://cdn.jsdelivr.net/gh/robertirish/un-peace-and-security-stylesheet@main/styles.css" rel="stylesheet">
+
+<style>
+    .peace-dictionary *, .peace-dictionary *::before, .peace-dictionary *::after { box-sizing: border-box; }
+
+    /* Search */
+    .peace-dictionary .pd-search {
+        position: sticky;
+        top: 35px;
+        z-index: 900;
+        background: #fff;
+        padding: 12px 20px;
+        width: 100%;
+        max-width: 100%;
+    }
+    .peace-dictionary .pd-search.pd-stuck {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .peace-dictionary .pd-search-inner {
+        max-width: 800px;
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+    }
+    .peace-dictionary .pd-search-inner label {
+        display: block;
+        font-size: 12px !important;
+        font-size: 1.2rem !important;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #666;
+        margin-bottom: 6px;
+    }
+    .peace-dictionary .pd-search-input-wrap {
+        position: relative;
+    }
+    .peace-dictionary .pd-search-input-wrap svg {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: #999;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        pointer-events: none;
+    }
+    .peace-dictionary .pd-search-field {
+        width: 100%;
+        padding: 12px 44px 12px 44px;
+        font-size: 18px !important;
+        font-size: 1.8rem !important;
+        font-family: inherit;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        outline: none;
+        transition: border-color 0.2s;
+        color: #454545;
+        background: #fff;
+    }
+    .peace-dictionary .pd-search-field:focus { border-color: #009edb; }
+    .peace-dictionary .pd-search-field::placeholder { color: #bbb; }
+    .peace-dictionary .pd-search-clear {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        font-size: 20px !important;
+        color: #999;
+        cursor: pointer;
+        padding: 4px 8px;
+        line-height: 1;
+        display: none;
+    }
+    .peace-dictionary .pd-search-clear:hover { color: #454545; }
+    .peace-dictionary .pd-search-info {
+        font-size: 14px !important;
+        font-size: 1.4rem !important;
+        color: #666;
+        margin-top: 8px;
+        min-height: 20px;
+    }
+
+    /* Alpha nav */
+    .peace-dictionary .pd-alpha-nav {
+        padding: 16px 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: center;
+    }
+    .peace-dictionary .pd-alpha-nav a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        font-size: 14px !important;
+        font-size: 1.4rem !important;
+        font-weight: 700;
+        text-decoration: none;
+        color: #009edb;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    .peace-dictionary .pd-alpha-nav a:hover,
+    .peace-dictionary .pd-alpha-nav a:focus {
+        background: #009edb;
+        color: #fff;
+        border-color: #009edb;
+    }
+    .peace-dictionary .pd-alpha-nav a.disabled {
+        display: none;
+    }
+
+    /* Terms container — div children of content-container don't get max-width from the parent rules */
+    .peace-dictionary .pd-terms {
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Letter group */
+    .peace-dictionary .pd-letter-group {
+        margin-top: 48px;
+        scroll-margin-top: 180px;
+    }
+    .peace-dictionary .pd-letter-heading {
+        font-size: 36px;
+        font-size: 3.6rem;
+        font-weight: 700;
+        color: #009edb;
+        padding-bottom: 8px;
+        border-bottom: 3px solid #009edb;
+        margin-bottom: 32px;
+    }
+
+    /* Dictionary entry */
+    .peace-dictionary .pd-entry {
+        margin-bottom: 48px;
+        padding-bottom: 48px;
+        border-bottom: 3px solid #ddd;
+        scroll-margin-top: 220px;
+    }
+    .peace-dictionary .pd-entry:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+    .peace-dictionary .pd-entry-term {
+        font-size: 28px;
+        font-size: 2.8rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 4px;
+        color: #454545;
+    }
+    .peace-dictionary .pd-entry-term dfn {
+        font-style: normal;
+    }
+    .peace-dictionary .pd-entry-meta {
+        color: #666;
+        margin-bottom: 16px;
+        font-style: italic;
+    }
+    .peace-dictionary .pd-entry-meta .pd-pos {
+        font-style: normal;
+        font-weight: 600;
+        color: #009edb;
+        text-transform: uppercase;
+        font-size: 13px !important;
+        font-size: 1.3rem !important;
+        letter-spacing: 0.5px;
+        margin-left: 8px;
+    }
+    .peace-dictionary .pd-entry-body p:last-child { margin-bottom: 0; }
+
+    /* Highlight */
+    .peace-dictionary mark {
+        background: #ffe066;
+        color: inherit;
+        padding: 1px 2px;
+        border-radius: 2px;
+    }
+
+    /* Accordion sections */
+    .peace-dictionary .pd-entry-body details {
+        margin-bottom: 0;
+    }
+    .peace-dictionary .pd-entry-body summary {
+        padding: 14px 0;
+        font-weight: 600;
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #454545;
+        border-bottom: 1px solid #ddd;
+        transition: color 0.2s;
+    }
+    .peace-dictionary .pd-entry-body summary:hover {
+        color: #009edb;
+    }
+    .peace-dictionary .pd-entry-body summary::-webkit-details-marker { display: none; }
+    .peace-dictionary .pd-entry-body summary::after {
+        content: '+';
+        font-size: 20px;
+        font-weight: 400;
+        color: #009edb;
+        transition: transform 0.2s;
+    }
+    .peace-dictionary .pd-entry-body details[open] > summary::after {
+        content: '\2212';
+    }
+    .peace-dictionary .pd-entry-body details .pd-details-body {
+        padding: 16px 0;
+    }
+    .peace-dictionary .pd-entry-body details .pd-details-body ul {
+        padding-left: 20px;
+        margin: 8px 0;
+    }
+    .peace-dictionary .pd-entry-body details .pd-details-body li {
+        margin-bottom: 6px;
+    }
+    .peace-dictionary .pd-entry-body .pd-related-terms {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .peace-dictionary .pd-entry-body .pd-related-terms a {
+        display: inline-block;
+        width: auto !important;
+        padding: 4px 12px;
+        border: 1px solid #009edb;
+        border-radius: 16px;
+        color: #009edb;
+        text-decoration: none;
+        font-size: 14px !important;
+        transition: all 0.2s;
+    }
+    .peace-dictionary .pd-entry-body .pd-related-terms a:hover {
+        background: #009edb;
+        color: #fff;
+    }
+    .peace-dictionary .pd-entry-body .pd-learn-more a {
+        color: #009edb;
+        text-decoration: none;
+    }
+    .peace-dictionary .pd-entry-body .pd-learn-more a:hover {
+        text-decoration: underline;
+    }
+
+    /* Visibility */
+    .peace-dictionary .pd-entry.pd-hidden { display: none; }
+    .peace-dictionary .pd-letter-group.pd-hidden { display: none; }
+
+    /* No results */
+    .peace-dictionary .pd-no-results {
+        text-align: center;
+        padding: 60px 0;
+        display: none;
+    }
+    .peace-dictionary .pd-no-results p {
+        color: #666;
+    }
+    .peace-dictionary .pd-no-results .pd-no-results-term {
+        font-weight: 700;
+        color: #454545;
+    }
+    .peace-dictionary .pd-no-results .pd-suggestion {
+        margin-top: 12px;
+        color: #999;
+    }
+
+    /* Source line */
+    .peace-dictionary .pd-source {
+        padding: 40px 0;
+        text-align: center;
+        color: #999;
+    }
+    .peace-dictionary .pd-source p {
+        font-size: 14px !important;
+        font-size: 1.4rem !important;
+    }
+
+    /* Print */
+    @media print {
+        .peace-dictionary .pd-search,
+        .peace-dictionary .pd-alpha-nav { display: none !important; }
+        .peace-dictionary .pd-entry { break-inside: avoid; }
+    }
+
+    /* Focus ring */
+    .peace-dictionary :focus-visible {
+        outline: 3px solid #009edb;
+        outline-offset: 2px;
+    }
+
+    /* Back to top */
+    .peace-dictionary .pd-back-to-top {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+        padding: 10px 16px;
+        background: #009edb;
+        color: #fff !important;
+        font-size: 14px !important;
+        font-family: 'Roboto Condensed', 'Arial Narrow', sans-serif;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        text-decoration: none;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        transition: background 0.2s;
+        width: auto !important;
+    }
+    .peace-dictionary .pd-back-to-top:hover {
+        background: #007ab8;
+    }
+    @media print {
+        .peace-dictionary .pd-back-to-top { display: none !important; }
+    }
+</style>
+
+<div class="peace-dictionary" id="peace-dictionary">
+
+<div class="content-container no-padding-top">
+	<div class="image-banner full-width">
+		<figure class="image-banner-image"><img alt="The Peace Dictionary banner" src="https://www.un.org/sites/un2.un.org/files/peace-dictionary-banner.png">
+		</figure>
+	</div>
+</div>
+
+<div class="content-container full-width no-padding-top">
+    <h2 class="style-h1 align-center">The Peace Dictionary</h2>
+    <h3 class="style-h2 align-center heading-underline no-margin-top">Understanding the language of peace and security</h3>
+</div>
+
+<div class="content-container no-padding-top">
+    <p class="lede align-center">This is a first mock-up of the Peace Dictionary with sample content pulled from the climate site. It uses semantic HTML and microformatting to maximize SEO and GEO. The javascript populates its definition list based on the HTML markup so that definitions are only stored in one location and are easily added/edited by non-coders.</p>
+</div>
+
+<div class="pd-search" role="search" aria-label="Search peace terms">
+    <div class="pd-search-inner">
+        <label for="pd-search-field">Find a term</label>
+        <div class="pd-search-input-wrap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="pd-search-field" class="pd-search-field" placeholder="e.g. peacebuilding, diplomacy, mediation&hellip;" autocomplete="off" aria-describedby="pd-search-info">
+            <button type="button" class="pd-search-clear" id="pd-search-clear" aria-label="Clear search">&times;</button>
+        </div>
+        <div id="pd-search-info" class="pd-search-info" aria-live="polite"></div>
+    </div>
+</div>
+
+<div class="content-container no-padding-top">
+    <nav class="pd-alpha-nav" aria-label="Alphabetical index" id="pd-alpha-nav"></nav>
+</div>
+
+<div class="content-container no-padding-top">
+    <div class="pd-terms" id="pd-terms" itemscope itemtype="https://schema.org/DefinedTermSet">
+        <meta itemprop="name" content="The Peace Dictionary">
+        <meta itemprop="description" content="A comprehensive glossary of key peace and security terms from the United Nations.">
+
+        <!-- A -->
+        <section class="pd-letter-group" id="pd-letter-A" aria-label="Terms starting with A">
+            <h2 class="pd-letter-heading">A</h2>
+
+            <article class="pd-entry" id="pd-adaptation" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Adaptation" data-search="adaptation climate change vulnerability weather extremes natural disasters sea-level rise biodiversity loss food water insecurity">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Adaptation</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ædæpˈteɪʃn/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Climate change adaptation refers to actions that help reduce vulnerability to the current or expected impacts of climate change like weather extremes and natural disasters, sea-level rise, biodiversity loss, or food and water insecurity.</p>
+                    <p>Many adaptation measures need to happen at the local level, so rural communities and cities have a big role to play. Such measures include planting crop varieties that are more resistant to drought and practicing regenerative agriculture, improving water storage and use, managing land to reduce wildfire risks, and building stronger defenses against extreme weather like floods and heat waves.</p>
+                    <p>However, adaptation also needs to be driven at the national and international levels. In addition to developing the policies needed to guide adaptation, governments need to look at large-scale measures such as strengthening or relocating infrastructure from coastal areas affected by sea-level rise, building infrastructure able to withstand more extreme weather conditions, enhancing early warning systems and access to disaster information, developing insurance mechanisms specific to climate-related threats, and creating new protections for wildlife and natural ecosystems.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- B -->
+        <section class="pd-letter-group" id="pd-letter-B" aria-label="Terms starting with B">
+            <h2 class="pd-letter-heading">B</h2>
+
+            <article class="pd-entry" id="pd-blue-economy" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Blue Economy" data-search="blue economy oceans seas marine economic development sustainability coastal fisheries tourism transport renewable energy aquaculture biotechnology">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Blue Economy</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈbluː ɪˈkɒnəmi/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>The world's oceans – their temperature, chemistry, currents, and life – drive global systems that make Earth habitable for humankind. Our rainwater, drinking water, weather, climate, coastlines, much of our food, medicines and even the oxygen in the air we breathe, are all provided and regulated by the seas. However, because of climate change, the health of our oceans is now at significant risk.</p>
+                    <p>The "blue economy" concept seeks to promote economic development, social inclusion, and the preservation or improvement of livelihoods while at the same time ensuring environmental sustainability of the oceans and coastal areas.</p>
+                    <p>Blue economy has diverse components, including established traditional ocean industries such as fisheries, tourism, and maritime transport, but also new and emerging activities, such as offshore renewable energy, aquaculture, seabed extractive activities, and marine biotechnology.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- C -->
+        <section class="pd-letter-group" id="pd-letter-C" aria-label="Terms starting with C">
+            <h2 class="pd-letter-heading">C</h2>
+
+            <article class="pd-entry" id="pd-carbon-removal-vs-carbon-capture" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Carbon Removal vs. Carbon Capture" data-search="carbon removal capture storage greenhouse gas emissions reforestation soil management direct air capture mineralization fossil fuel decarbonize">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Carbon Removal vs. Carbon Capture</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈkɑːbən rɪˈmuːvl/</span> — <span aria-label="pronunciation">/ˈkɑːbən kæptʃə(r)/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Carbon removal is the process of removing greenhouse gas emissions from the atmosphere, through natural solutions such as reforestation and soil management or technological solutions like direct air capture and enhanced mineralization. Carbon removal is not a substitute for cutting greenhouse gas emissions, but it can slow down climate change and is necessary to shorten any period during which we temporarily overshoot our climate targets.</p>
+                    <p>Carbon capture and storage is the process of trapping carbon emissions produced by fossil fuel power plants or other industrial processes before they can enter our atmosphere by storing them deep underground. Carbon capture and storage should not be seen as an alternative to the green energy transition, but it has been proposed as a way to tackle emissions from sectors that are difficult to decarbonize, particularly heavy industries like cement, steel, and chemicals.</p>
+                    <p>However, these technologies are only in the early development stage and will require carefully-designed policies. Dramatically slashing greenhouse gas emissions must remain the top priority to combat the climate crisis.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-carbon-footprint" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Carbon Footprint" data-search="carbon footprint greenhouse gas emissions measure person organization product activity fossil fuels energy wind solar">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Carbon Footprint</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈkɑːbən ˈfʊtprɪnt/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>A carbon footprint is a measure of the greenhouse gas emissions released into the atmosphere by a particular person, organization, product, or activity. A bigger carbon footprint means more emissions of carbon dioxide and methane, and therefore a bigger contribution to the climate crisis.</p>
+                    <p>Measuring a person's or an organization's carbon footprint entails looking at both the direct emissions resulting from the burning of fossil fuels for energy production, heating, and land and air travel, and indirect emissions resulting from the production and disposal of all food, manufactured goods, and services they consume.</p>
+                    <p>Carbon footprints can be reduced by shifting to low-carbon energy sources like wind and solar, improving energy efficiency, strengthening industry policies and regulations, changing purchasing and travel habits, and reducing meat consumption and food waste.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-carbon-markets" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Carbon Markets" data-search="carbon markets trading credits greenhouse gas emissions NDC sustainability carbon-neutral greenwashing accounting transparency">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Carbon Markets</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈkɑːbən mɑːkɪts/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Carbon markets are trading schemes that create financial incentives for activities that reduce or remove greenhouse gas emissions. In these schemes, emissions are quantified into carbon credits that can be bought and sold. One tradable carbon credit equals one tonne of carbon dioxide, or the equivalent amount of a different greenhouse gas reduced, sequestered or avoided.</p>
+                    <p>Carbon credits can be bought by countries as part of their NDC strategy, by corporations with sustainability targets, and by private individuals that want to compensate for their carbon footprint.</p>
+                    <p>The supply of carbon credits comes from private entities or governments that develop programmes to reduce or remove emissions. These programmes are certified by a third party and registered under a carbon market standard.</p>
+                    <p>For carbon markets to be successful, countries must work together to secure robust carbon accounting, ensure transparency for carbon market transactions, implement safeguards against human rights abuses and other adverse societal impacts, and combat greenwashing and the misrepresentation of carbon-neutral products and services.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-carbon-sink" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Carbon Sink" data-search="carbon sink absorb carbon dioxide atmosphere forests oceans soil blue carbon wetlands peat bogs deforestation global warming net zero greenhouse gas emissions biodiversity climate change">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Carbon Sink</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈkɑːbən sɪŋk/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>A carbon sink is any process, activity, or system that absorbs more carbon dioxide (CO₂) from the atmosphere than it releases.</p>
+
+                    <details open>
+                        <summary>In simple terms</summary>
+                        <div class="pd-details-body">
+                            <p>A carbon sink removes carbon from the air and stores it—helping slow down <a href="#pd-global-warming-vs-climate-change">climate change</a>.</p>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>Why it matters</summary>
+                        <div class="pd-details-body">
+                            <p>Carbon sinks help keep the planet livable by reducing the amount of carbon dioxide in the atmosphere.</p>
+                            <p>They support:</p>
+                            <ul>
+                                <li>A more stable climate</li>
+                                <li>Healthier ecosystems and <a href="#pd-resilience">biodiversity</a></li>
+                                <li>Cleaner air and oceans</li>
+                                <li>A safer future for communities and economies</li>
+                            </ul>
+                            <p>When carbon sinks are damaged or lost, more carbon stays in the atmosphere—accelerating <a href="#pd-global-warming-vs-climate-change">global warming</a>.</p>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>How it works</summary>
+                        <div class="pd-details-body">
+                            <p>Natural carbon sinks absorb and store carbon over time:</p>
+                            <ul>
+                                <li><strong>Oceans</strong> absorb CO₂ through marine ecosystems, including plant and animal life (often referred to as <a href="#pd-blue-economy">blue carbon</a>)</li>
+                                <li><strong>Forests</strong> store carbon in trees and vegetation</li>
+                                <li><strong>Soil and wetlands</strong> store carbon in plant material, peat, and organic matter</li>
+                            </ul>
+                            <p>However, human activities, such as burning fossil fuels and <a href="#pd-reforestation-vs-afforestation">deforestation</a>, are releasing more carbon than these natural systems can absorb.</p>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>Questions people ask about carbon sinks</summary>
+                        <div class="pd-details-body">
+                            <p><strong>What is a carbon sink?</strong><br>A carbon sink is anything that absorbs more carbon dioxide from the atmosphere than it releases.</p>
+                            <p><strong>What are examples of carbon sinks?</strong><br>Major natural carbon sinks include oceans, forests, soil, and wetlands.</p>
+                            <p><strong>Why are carbon sinks important?</strong><br>Carbon sinks help reduce <a href="#pd-greenhouse-gas-emissions">greenhouse gases</a> in the atmosphere, slowing <a href="#pd-global-warming-vs-climate-change">climate change</a> and supporting a stable environment.</p>
+                            <p><strong>What is blue carbon?</strong><br>Blue carbon refers to carbon stored in marine ecosystems such as oceans, mangroves, and seagrasses.</p>
+                            <p><strong>Are carbon sinks under threat?</strong><br>Yes. <a href="#pd-reforestation-vs-afforestation">Deforestation</a>, pollution, and climate change are weakening natural carbon sinks and can cause stored carbon to be released back into the atmosphere.</p>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>Data / Facts and Figures</summary>
+                        <div class="pd-details-body">
+                            <ul>
+                                <li>Natural carbon sinks currently absorb a significant share of human-generated <a href="#pd-carbon-footprint">carbon emissions</a> each year.</li>
+                                <li>Damage to forests, oceans, and soils reduces their ability to store carbon and can accelerate climate change.</li>
+                                <li>Protecting and restoring carbon sinks is a key strategy in global <a href="#pd-mitigation">climate action</a> efforts.</li>
+                            </ul>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>Related terms</summary>
+                        <div class="pd-details-body">
+                            <div class="pd-related-terms">
+                                <a href="#pd-global-warming-vs-climate-change">Climate Change</a>
+                                <a href="#pd-greenhouse-gas-emissions">Greenhouse Gases</a>
+                                <a href="#pd-net-zero">Net Zero</a>
+                                <a href="#pd-reforestation-vs-afforestation">Deforestation</a>
+                                <a href="#pd-nature-based-solutions">Nature-based Solutions</a>
+                                <a href="#pd-rewilding">Rewilding</a>
+                                <a href="#pd-mitigation">Mitigation</a>
+                            </div>
+                        </div>
+                    </details>
+
+                    <details>
+                        <summary>Learn more</summary>
+                        <div class="pd-details-body pd-learn-more">
+                            <ul>
+                                <li><a href="https://www.un.org/en/climatechange/science/climate-issues/climate-action" rel="noopener">Climate action and ecosystems (UN explainer)</a></li>
+                                <li><a href="https://www.un.org/en/climatechange/science/climate-issues/forests" rel="noopener">Forests and climate change</a></li>
+                                <li><a href="https://www.un.org/en/climatechange/science/climate-issues/ocean" rel="noopener">Ocean and climate connections</a></li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-circular-economy" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Circular Economy" data-search="circular economy production consumption waste pollution natural resources regenerate textiles buildings construction biodiversity green jobs">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Circular Economy</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈsɜːkjələ(r) ɪˈkɒnəmi/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Circular economy refers to models of production and consumption that minimize waste and reduce pollution, promote sustainable uses of natural resources, and help regenerate nature.</p>
+                    <p>Circular economy approaches are all around us. They can be employed in a number of different sectors from textiles to buildings and construction, and at various stages of a product's lifecycle, including design, manufacturing, distribution, and disposal.</p>
+                    <p>Besides helping tackle the problem of pollution, circular economy approaches can play a critical role in solving other complex challenges such as climate change and biodiversity loss. They can help countries accelerate their transition to more resilient and lower-carbon economies while also creating new green jobs.</p>
+                    <p>Currently, only 7.2 percent of used materials are cycled back into our economies after use. This has a significant burden on the environment and contributes to the climate, biodiversity, and pollution crises. As a result, we currently need about 1.7 Earths to deliver on all the world's resource demands.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-climate-crisis" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Climate Crisis" data-search="climate crisis problems weather extremes natural disasters ocean acidification sea-level rise biodiversity loss food water health economic displacement conflict tipping points 1.5 degrees">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Climate Crisis</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈklaɪmət kraɪsɪs/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>The climate crisis refers to the serious problems that are being caused, or are likely to be caused, by changes in the planet's climate, including weather extremes and natural disasters, ocean acidification and sea-level rise, loss of biodiversity, food and water insecurity, health risks, economic disruption, displacement, and even violent conflict.</p>
+                    <p>Since the 1800s, human activities have caused the Earth's average temperature to increase by about 1.2°C – with more than two-thirds of this warming occurring since 1975. This is already causing significant damage to human societies and natural ecosystems in many parts of the world. More than 3 billion people live in places that are very vulnerable to the climate crisis, with lower income countries being disproportionately affected.</p>
+                    <p>Scientists expect that an increase beyond 1.5°C would begin to lead to a series of dangerous tipping points that would make many changes irreversible and pose a very serious threat to human civilization. This is why governments must act now to drastically reduce greenhouse gas emissions and chart a course for reaching net zero in the coming decades, invest in adaptation to the unavoidable impacts of climate change, and protect and restore natural ecosystems and biomes upon which the planet depends.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-climate-finance" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Climate Finance" data-search="climate finance financial resources instruments investment low-carbon economy resilience adaptation Green Climate Fund GCF Global Environment Facility Adaptation Fund grants bonds debt swaps">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Climate Finance</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈklaɪmət ˈfaɪnæns/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Climate finance refers to financial resources and instruments that are used to support action on climate change. Climate finance is critical to addressing climate change because of the large-scale investments that are needed to transition to a low-carbon global economy and to help societies build resilience and adapt to the impacts of climate change.</p>
+                    <p>Climate finance can come from different sources, public or private, national or international, bilateral or multilateral. It can employ different instruments such as grants and donations, green bonds, debt swaps, guarantees, and concessional loans. And it can be used for different activities, including mitigation, adaptation, and resilience-building.</p>
+                    <p>Some multilateral funds that countries can access include the Green Climate Fund (GCF), the Global Environment Facility (GEF), and the Adaptation Fund (AF). High-income countries with a significant historical contribution to climate change have committed to raising US$100 billion every year to fund climate action in low-income countries. However, this target has not yet been reached and more funding is required for both mitigation and adaptation interventions.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-climate-justice" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Climate Justice" data-search="climate justice equity human rights decision-making vulnerable countries communities intergenerational children young people responsibility inequality race ethnicity gender">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Climate Justice</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈklaɪmət ˈdʒʌstɪs/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Climate justice means putting equity and human rights at the core of decision-making and action on climate change.</p>
+                    <p>One aspect of climate justice relates to the unequal historical responsibility that countries bear in relation to the climate crisis. The concept suggests that the countries, industries, and businesses that have become wealthy from activities that emitted the most greenhouse gas emissions have a responsibility to help mitigate the impacts of climate change on those affected, particularly the most vulnerable countries and communities, who often are the ones that have contributed the least to the crisis.</p>
+                    <p>Even within the same country, because of structural inequalities based on race, ethnicity, gender, and socioeconomic status, the responsibilities in addressing climate change need to be divided fairly, with the biggest responsibility resting on those who have contributed to, and benefitted from, causing the crisis the most.</p>
+                    <p>Another aspect of climate justice is the intergenerational one. Children and young people today have not contributed to the climate crisis in a significant way but will bear the full force of climate change impacts as they advance through life. Because their human rights are threatened by the decisions of previous generations, they must have a central role in all climate decision-making and action.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-climate-overshoot" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Climate Overshoot" data-search="climate overshoot Paris Agreement 1.5 degrees global warming temperature threshold irreversible impacts ecosystems biodiversity emission cuts">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Climate Overshoot</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈklaɪmət ˌəʊvəˈʃuːt/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Under the Paris Agreement, countries are expected to take the necessary measures to avoid dangerous climate change by limiting global warming to well below 2°C and pursuing efforts to limit it to 1.5°C. But even best-case scenarios now indicate a significant chance of overshooting these goals, even if temporarily. Climate overshoot refers to the period during which warming will have increased past 1.5°C, before falling back down. This period will probably occur around the middle of this century but troubling signs are emerging that it may occur even earlier.</p>
+                    <p>The longer the climate overshoot lasts, the more dangerous the world will become. A prolonged period of higher global temperatures will have devastating and irreversible impacts on natural ecosystems, biodiversity, and human communities, particularly in dry areas, coastal zones, and other vulnerable locations. Making deep emission cuts during this decade is of extreme importance to limiting the duration and impacts of the climate overshoot.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-climate-security" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Climate Security" data-search="climate security peace stability food water livelihood insecurity displacement migration conflict fragility renewable energy peacebuilding">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Climate Security</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈklaɪmət sɪˈkjʊərəti/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Climate change can exacerbate food, water, and livelihood insecurity, with cascading effects such as displacement and migration and increased competition over natural resources, all of which can lead to increased tensions and instability in a country or a region. Furthermore, the impacts of climate change can aggravate or prolong existing violent conflicts and make it more difficult to deliver climate action and to reach and sustain peace.</p>
+                    <p>Climate security refers to evaluating, managing, and reducing the risks to peace and stability brought on by the climate crisis. This means ensuring that climate mitigation and adaptation goes beyond doing no harm and contributes positively to peace and stability. It also means that conflict prevention and peacebuilding interventions take climate impacts into account. The technical solutions to climate action and adaptation can serve as opportunities to build peace and mend the social fabric, especially in countries affected by conflict and fragility.</p>
+                    <p>Climate action can help alleviate the underlying drivers of conflict and fragility. For example, access to renewable energy can be a lifeline which supports clean water, light, warmth, and sustenance, as well as basic and emergency services. It also powers local economic development, while setting countries on a sustainable development pathway to recovery.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-cop" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="COP" data-search="COP Conference of the Parties United Nations climate change UNFCCC Paris Agreement COP21 legally binding agreements">
+                <h3 class="pd-entry-term" itemprop="name"><dfn><abbr title="Conference of the Parties">COP</abbr></dfn></h3>
+                <p class="pd-entry-meta">Conference of the Parties <span class="pd-pos">abbreviation</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>The annual United Nations conference dedicated to climate change, called "the Conference of the Parties" or "COP," has been organized under the UN Framework Convention on Climate Change (UNFCCC) since 1995. At the 21st COP, or COP21, which took place in 2015, the Paris Agreement was signed.</p>
+                    <p>The conference now brings together all nations who are parties to the Paris Agreement to discuss their next steps to combat climate change and further establish legally binding agreements to support climate action.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- D -->
+        <section class="pd-letter-group" id="pd-letter-D" aria-label="Terms starting with D">
+            <h2 class="pd-letter-heading">D</h2>
+
+            <article class="pd-entry" id="pd-decarbonization" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Decarbonization" data-search="decarbonization greenhouse gas emissions economy energy goods services transportation renewable circular resource efficiency Paris Agreement 1.5 degrees 2030">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Decarbonization</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˌdiːˌkɑːbənaɪˈzeɪʃn/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Decarbonization means reducing the amount of greenhouse gas emissions that a society produces, as well as increasing the amount that is being absorbed. It entails changing many, if not all, aspects of the economy, from how energy is generated, to how goods and services are produced and delivered, to how buildings are built and how lands are managed.</p>
+                    <p>To meet the goals of the Paris Agreement and keep the 1.5° target alive, governments and businesses must rapidly decarbonize by 2030. Meaningful decarbonization requires substantial investments in low-carbon infrastructure and transportation, renewable energy sources, circular economy and resource efficiency, and land and soil restoration. It also requires a rethinking of current economic models that are focused on growth at all costs.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- F -->
+        <section class="pd-letter-group" id="pd-letter-F" aria-label="Terms starting with F">
+            <h2 class="pd-letter-heading">F</h2>
+
+            <article class="pd-entry" id="pd-feedback-loop" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Feedback Loop" data-search="feedback loop chain reaction tipping points irreversible sea ice Arctic warming wildfires permafrost forest dieback">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Feedback Loop</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈfiːdbæk luːp/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Climate feedback loops happen when one change in the climate triggers further changes, in a chain reaction that reinforces itself as time goes on. Ultimately, feedback loops can trigger tipping points, at which point the changes to our planet's climate systems become severe and irreversible.</p>
+                    <p>Currently, scientists are aware of some serious feedback loops that are driving global warming. For example, as sea ice in the Arctic melts, more heat is being absorbed by the darker ocean waters, thus speeding up the warming process and leading to more ice melting. Similarly, as wildfires burn down forests, they release greenhouse gases leading to more warming and more wildfires. Other feedback loops include the thawing of the permafrost, forest dieback, and insect outbreaks.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- G -->
+        <section class="pd-letter-group" id="pd-letter-G" aria-label="Terms starting with G">
+            <h2 class="pd-letter-heading">G</h2>
+
+            <article class="pd-entry" id="pd-global-warming-vs-climate-change" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Global Warming vs. Climate Change" data-search="global warming climate change temperature greenhouse gases fossil fuels deforestation ecosystems biodiversity hurricanes floods heat waves droughts sea level rise">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Global Warming vs. Climate Change</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˌɡləʊbl ˈwɔːmɪŋ/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Global warming is an increase in the Earth's average surface temperature that occurs when the concentration of greenhouse gases in the atmosphere increases. These gases absorb more solar radiation and trap more heat, thus causing the planet to get hotter. Burning fossil fuels, cutting down forests, and farming livestock are some human activities that release greenhouse gases and contribute to global warming.</p>
+                    <p>Climate change refers to the long-term changes in the Earth's climate that are warming the atmosphere, ocean and land. Climate change is affecting the balance of ecosystems that support life and biodiversity, and impacting health. It also causes more extreme weather events, such as more intense and/or frequent hurricanes, floods, heat waves, and droughts, and leads to sea level rise and coastal erosion as a result of ocean warming, melting of glaciers, and loss of ice sheets.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-green-jobs" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Green Jobs" data-search="green jobs decent environment climate change renewable energy recycling efficiency waste pollution ecosystems adaptation workforce skills training just transition">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Green Jobs</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ɡriːn dʒɒb/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Green jobs are decent jobs that contribute to protecting and restoring the environment and addressing climate change. Green jobs can be found in both the production of green products and services, such as renewable energy, and in environmentally friendly processes, such as recycling. Green jobs help improve energy and raw material efficiency, limit greenhouse gas emissions, minimize waste and pollution, protect and restore ecosystems, and support adaptation to the impacts of climate change.</p>
+                    <p>As the market for green jobs is expanding, countries must ensure that the workforce is equipped with the specific skills and education required to carry them out. This can be achieved by investing in training young people for future green jobs and by retraining workers from carbon-intensive industries. The latter is a key part of ensuring countries are pursuing a just transition and leave no one behind.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-greenhouse-gas-emissions" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Greenhouse Gas Emissions" data-search="greenhouse gas emissions carbon dioxide methane nitrous oxide fluorinated gases fossil fuels deforestation industrial global warming 1.5 degrees">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Greenhouse Gas Emissions</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˌɡriːn.haʊs ˈɡæs ɪˈmɪʃns/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Greenhouse gases are gases that trap heat from the sun in our planet's atmosphere, keeping it warm. Since the industrial era began, human activities have led to the release of dangerous levels of greenhouse gases, causing global warming and climate change.</p>
+                    <p>The main greenhouse gases released by human activities are carbon dioxide, methane, nitrous oxide, and fluorinated gases used for cooling and refrigeration. Carbon dioxide is the primary greenhouse gas resulting from human activities, particularly from burning fossil fuels, deforestation, and changing the way land is used. Our reliance on fossil fuels has led to a 50 percent increase in the concentrations of carbon dioxide in the atmosphere over the last 200 years. Methane is another important greenhouse gas that is responsible for 25 percent of global warming. Methane is released during the extraction and transport of coal, gas, and oil, and by waste landfills and agricultural practices.</p>
+                    <p>To prevent catastrophic climate change, the world's governments must work together to significantly reduce greenhouse gas emissions now and in the coming decades and keep global warming below the dangerous threshold of 1.5°C.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-greenwashing" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Greenwashing" data-search="greenwashing misleading claims environmental impact sustainability products services marketing public relations profit consumers">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Greenwashing</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈɡriːnwɒʃɪŋ/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>With public pressure to address the climate crisis rising, private sector companies are joining the transition to a low-carbon global economy. However, their efforts can sometimes turn into more of a marketing exercise than real, meaningful action.</p>
+                    <p>Greenwashing refers to situations where a company makes misleading claims about their positive environmental impact or the sustainability of their products and services to convince consumers that they are acting on climate change. In some cases, greenwashing can be unintentional, because of lack of knowledge on environmental issues. However, it can also be carried out intentionally as a marketing and public relations exercise, exploiting public support towards environmental policies for profit.</p>
+                    <p>Greenwashing can erode public confidence in sustainability and allow negative environmental impacts to continue unabated.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- I -->
+        <section class="pd-letter-group" id="pd-letter-I" aria-label="Terms starting with I">
+            <h2 class="pd-letter-heading">I</h2>
+
+            <article class="pd-entry" id="pd-indigenous-knowledge" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Indigenous Knowledge" data-search="indigenous knowledge peoples traditional practices low-carbon environment ecosystems biodiversity climate solutions adaptation mitigation resilience ancestral lands territories rights">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Indigenous Knowledge</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ɪnˈdɪdʒənəs ˈnɒlɪdʒ/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Indigenous Peoples' ways of life are inherently low-carbon and emphasize balance between humans and the natural world. Their traditional practices have low impact on the environment and are responsive to it, fostering self-sustaining ecosystems.</p>
+                    <p>Indigenous Peoples were among the first to notice climate change and their knowledge and practices help navigate and adapt to its impacts. Indigenous knowledge, which is intergenerational and community-based, is a great source of meaningful climate solutions that can advance mitigation, enhance adaptation, and build resilience. It can also complement scientific data with precise landscape information that is critical to evaluating climate change scenarios.</p>
+                    <p>Indigenous Peoples protect an estimated 80 percent of the world's remaining biodiversity yet continue to be largely excluded from almost all global decision-making processes on climate change. Their collective knowledge, valuable insights, and rights to their ancestral lands, territories and resources, and their way of life must be recognized and included across climate policies and actions.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-ipcc" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="IPCC" data-search="IPCC Intergovernmental Panel on Climate Change scientific WMO UNEP policymakers research assessment impacts risks adaptation mitigation">
+                <h3 class="pd-entry-term" itemprop="name"><dfn><abbr title="Intergovernmental Panel on Climate Change">IPCC</abbr></dfn></h3>
+                <p class="pd-entry-meta">Intergovernmental Panel on Climate Change <span class="pd-pos">abbreviation</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>The Intergovernmental Panel on Climate Change (IPCC) is an independent body founded under the auspices of the World Meteorological Organization (WMO) and the United Nations Environment Programme (UNEP).</p>
+                    <p>The IPCC's main role is to assess the scientific literature and findings on climate change and provide vital scientific information and evidenced-based recommendations to policymakers and the public. It is widely recognized as the most credible source of information related to the science of climate change and its complex analysis of impacts, risks, and adaptation and mitigation options.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- J -->
+        <section class="pd-letter-group" id="pd-letter-J" aria-label="Terms starting with J">
+            <h2 class="pd-letter-heading">J</h2>
+
+            <article class="pd-entry" id="pd-just-transition" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Just Transition" data-search="just transition low-carbon net-zero economy equality inclusivity workers communities training reskilling decent work green inequality">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Just Transition</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/dʒʌst trænˈzɪʃn/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>In the context of climate change, transitioning to a low-carbon or net-zero economy requires massive transformation of our economic systems. Such transformation runs the risk of further increasing social inequality, exclusion, civil unrest, and less competitive businesses, sectors, and markets.</p>
+                    <p>As countries work to meet their climate goals, it's vital that they ensure the whole-of-society – all communities, all workers, all social groups – are brought along and part of the structural change that takes place.</p>
+                    <p>Ensuring a just transition means that countries choose to green their economy through transition pathways and approaches that reinforce equality and inclusivity. This means looking at the impacts of the transition on different groups of workers across the economy and providing opportunities for training and reskilling that support decent work and aim to leave no one behind.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- L -->
+        <section class="pd-letter-group" id="pd-letter-L" aria-label="Terms starting with L">
+            <h2 class="pd-letter-heading">L</h2>
+
+            <article class="pd-entry" id="pd-loss-and-damage" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Loss and Damage" data-search="loss damage unavoidable impacts climate change adaptation limits tipping points economic infrastructure cyclones floods sea-level rise non-economic trauma displacement biodiversity culture">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Loss and Damage</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/lɒs ənd ˈdæmɪdʒ/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>There is no agreed definition of "Loss and damage" in the international climate negotiations. However, the term can refer to the unavoidable impacts of climate change that occur despite, or in the absence of, mitigation and adaptation. Importantly, it highlights that there are limits to what adaptation can accomplish; when tipping point thresholds are crossed, climate change impacts can become unavoidable.</p>
+                    <p>Loss and damage can refer to both economic and non-economic losses. Economic loss and damage can include things like the costs of rebuilding infrastructure that has repeatedly been damaged due to cyclones or floods, or the loss of coastline land (and homes and businesses) due to sea-level rise and coastal erosion.</p>
+                    <p>Non-economic loss and damage include negative impacts that can't be easily assigned a monetary value. This can include things such as trauma from experiencing a climate-related natural disaster, loss of life, the displacement of communities, loss of history and culture or loss of biodiversity.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-long-term-strategies" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Long-term Strategies" data-search="long-term strategies LTS emissions reductions Paris Agreement NDC 2050 net-zero low-carbon development innovation investment just equitable transitions LT-LEDS UNFCCC">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Long-term Strategies</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˌlɒŋ ˈtɜːm ˈstrætədʒis/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Under the Paris Agreement, countries are invited to communicate long-term strategies (LTS) for emissions reductions that envision a whole-of-society transformation over several decades, usually up to 2050. LTS documents align to the long-term objectives of limiting global warming and achieving net-zero by 2050.</p>
+                    <p>Long-term strategies provide a long-term vision that gives coherence and direction to shorter-term national climate pledges like the NDCs. They guide countries to pursue low-carbon development and prevent fossil fuel-intensive investments, demonstrating the socio-economic benefits of the green transition. They boost innovation and can help drive investment in low-carbon solutions and sustainable infrastructure. And they help facilitate and promote just and equitable transitions for the people who are most affected, making sure that climate solutions are fair and inclusive.</p>
+                    <p>When countries officially communicate their LTS to the UNFCCC it is called a Long-Term Low Emission Development Strategy (LT-LEDS).</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- M -->
+        <section class="pd-letter-group" id="pd-letter-M" aria-label="Terms starting with M">
+            <h2 class="pd-letter-heading">M</h2>
+
+            <article class="pd-entry" id="pd-mitigation" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Mitigation" data-search="mitigation greenhouse gas emissions carbon sinks renewable energy wind solar transportation agriculture land use forests wetlands legislation policies Paris Agreement 1.5 degrees net-zero 2030 2050">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Mitigation</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/mɪtɪˈɡeɪʃn/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Climate change mitigation refers to any action taken by governments, businesses, or people to reduce or prevent greenhouse gas emissions, or to enhance carbon sinks that remove these gases from the atmosphere.</p>
+                    <p>Reducing or preventing greenhouse gas emissions can be achieved by transitioning to renewable energy sources like wind and solar, using energy more efficiently, adopting low carbon or carbon-free transportation modalities, promoting sustainable agriculture and land use, and changing production and consumption models and diet behaviors. Enhancing carbon sinks can be achieved by restoring forests, wetlands, and marshlands, maintaining soil health, and protecting terrestrial and marine ecosystems.</p>
+                    <p>In order for mitigation actions to be successful, it is crucial that countries develop supportive environments through legislation, policies, and investments.</p>
+                    <p>To limit global warming to 1.5°C, which is the critical goal of the Paris Agreement, the world must implement climate change mitigation actions to reduce greenhouse gas emissions by 45 percent before 2030 and reach net-zero greenhouse gas emissions by mid-century.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- N -->
+        <section class="pd-letter-group" id="pd-letter-N" aria-label="Terms starting with N">
+            <h2 class="pd-letter-heading">N</h2>
+
+            <article class="pd-entry" id="pd-nationally-determined-contributions" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Nationally Determined Contributions" data-search="nationally determined contributions NDC climate pledges action plans Paris Agreement 1.5 degrees mitigation adaptation financing monitoring verification global stocktake">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Nationally Determined Contributions</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈnæʃnəli dɪˈtɜːmɪnd ˌkɒntrɪˈbjuːʃns/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Nationally Determined Contributions (NDCs) are climate pledges and action plans that each country is required to develop in line with the Paris Agreement goal of limiting global warming to 1.5°C. NDCs represent short to medium-term plans that are updated every five years with higher ambition on climate.</p>
+                    <p>NDCs outline mitigation and adaptation priorities a country will pursue to reduce greenhouse gas emissions, build resilience, and adapt to climate change, as well as financing strategies and monitoring and verification approaches. In 2023, the first in a series of global "stock takes" will conclude that assesses progress on the implementation of NDCs and Paris Agreement goals.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-national-adaptation-plans" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="National Adaptation Plans" data-search="national adaptation plans NAP vulnerability climate change adaptive capacity resilience NDC participatory inclusive gender-responsive transparent">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>National Adaptation Plans</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈnæʃnəl ˌædæpˈteɪʃn plæns/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>National Adaptation Plans (NAPs) help countries plan and implement actions to reduce vulnerability to the impacts of climate change and strengthen adaptive capacity and resilience. NAPs link to Nationally Determined Contributions (NDCs) and other national and sectoral policies and programmes.</p>
+                    <p>For NAPs to be successful they need to be participatory, inclusive, gender-responsive, and transparent. This means that at the design stage, NAPs need to evaluate the specific needs and vulnerabilities of different groups in the country, paying particular attention to those most vulnerable to climate change impacts and involving them in developing and implementing strategies and programmes.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-nature-based-solutions" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Nature-based Solutions" data-search="nature-based solutions ecosystems biodiversity climate change adaptation mitigation wetlands mangroves forests parks gardens regenerative agriculture indigenous peoples livelihoods jobs">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Nature-based Solutions</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈneɪtʃə(r) beɪst səˈluːʃns/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Nature-based solutions are actions to protect, conserve, restore, and sustainably use and manage ecosystems to support climate change adaptation and mitigation efforts, preserve biodiversity, and enable sustainable livelihoods. They are actions that prioritize the importance of ecosystems and biodiversity and are designed and implemented with the full engagement and consent of local communities and Indigenous Peoples, who hold generational knowledge on protecting nature.</p>
+                    <p>Nature-based solutions are used in many ways, across terrestrial, freshwater, coastal, and marine ecosystems. Restoring wetlands protects communities from floods, while conserving mangrove forests supports food sources and minimizes the impact of storms. Forests absorb carbon dioxide, allow biodiversity to thrive, increase water security, and combat landslides, while urban parks and gardens help cool down cities and limit the impact of heatwaves. Regenerative agriculture practices increase the amount of carbon captured by the soil and restore its health and productivity.</p>
+                    <p>Nature-based solutions are seen as a win-win for people and nature, addressing multiple problems at once. They can create jobs, provide new and more resilient livelihood opportunities, and increase income while also protecting the planet and addressing climate change.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-net-zero" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Net Zero" data-search="net zero carbon dioxide emissions human activity carbon sinks energy transportation production consumption 1.5 degrees IPCC 2030 2050 transformation">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Net Zero</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˌnet ˈzɪərəʊ/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Reaching net zero requires us to ensure that carbon dioxide emissions from human activity are balanced by human efforts to remove carbon dioxide emissions (for example, by creating carbon sinks to absorb carbon dioxide) — thereby stopping further increases in the concentration of greenhouse gases in the atmosphere.</p>
+                    <p>Transitioning to net zero requires a complete transformation of our energy, transportation, and production and consumption systems. This is necessary to avert the worst consequences of climate change. To keep global warming below 1.5°C, the world's governments need to ensure that all greenhouse gas emissions peak by 2025, and reach net zero in the second half of this century. The IPCC has recommended to reduce CO2 emissions globally by 45% before 2030 (compared to 2010 levels) and reach net zero by mid-century.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- P -->
+        <section class="pd-letter-group" id="pd-letter-P" aria-label="Terms starting with P">
+            <h2 class="pd-letter-heading">P</h2>
+
+            <article class="pd-entry" id="pd-paris-agreement" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Paris Agreement" data-search="Paris Agreement legally binding international treaty global warming 2 degrees 1.5 degrees COP21 2015 cooperation mitigation adaptation monitoring reporting">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Paris Agreement</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/pærɪs əˈɡriːmənt/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>The Paris Agreement is a legally binding international treaty aiming to limit global warming to well below 2°C, preferably to 1.5°C, compared to pre-industrial levels. It was adopted by 196 Parties in 2015 at COP21 in Paris and entered into force in 2016.</p>
+                    <p>The Paris Agreement is a landmark achievement in international cooperation on climate change because it is a binding agreement for all Parties to scale up efforts to combat climate change and adapt to its effects. It also provides the instruments for developed nations to assist developing nations in their climate mitigation and adaptation efforts, while creating a framework for transparent monitoring and reporting of results.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- R -->
+        <section class="pd-letter-group" id="pd-letter-R" aria-label="Terms starting with R">
+            <h2 class="pd-letter-heading">R</h2>
+
+            <article class="pd-entry" id="pd-reforestation-vs-afforestation" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Reforestation vs. Afforestation" data-search="reforestation afforestation forests trees carbon dioxide nature-based solutions wildfires drought deforestation agricultural degraded desertification carbon sinks">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Reforestation vs. Afforestation</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˌriːfɒrɪˈsteɪʃn/</span> — <span aria-label="pronunciation">/əˌfɒrɪˈsteɪʃn/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Forests provide immense benefits by removing carbon dioxide and pollutants from the atmosphere, preventing soil erosion, filtering water, and housing half of the world's land species of animals, plants and insects. Reforestation and afforestation are two of the most effective nature-based solutions in fighting climate change and limiting its impacts.</p>
+                    <p>Reforestation is the process of replanting trees in areas that had recent tree cover but where forests were lost, due to wildfires, drought, disease, or human activity such as agricultural clearing.</p>
+                    <p>Afforestation is the process of planting trees in areas that have not been forested in recent history. Afforestation helps restore abandoned and degraded agricultural lands, prevent desertification, create carbon sinks, and generate new economic opportunities for local communities.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-redd-plus" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="REDD+" data-search="REDD+ reducing emissions deforestation forest degradation conservation sustainable management carbon stocks developing countries framework">
+                <h3 class="pd-entry-term" itemprop="name"><dfn><abbr title="Reducing Emissions from Deforestation and forest Degradation">REDD+</abbr></dfn></h3>
+                <p class="pd-entry-meta">Reducing Emissions from Deforestation and forest Degradation <span class="pd-pos">abbreviation</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Forest conservation and restoration can provide more than one quarter of the greenhouse gas emissions reductions needed to avoid the worst impacts of climate change. REDD+ is a framework agreed by countries in the international climate negotiations that aims to curb climate change by reducing deforestation and forest degradation, and sustainably managing and conserving forests in developing countries.</p>
+                    <p>REDD stands for "Reducing Emissions from Deforestation and forest Degradation". The "+" signifies the role of conservation, sustainable management of forests and enhancement of forest carbon stocks.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-regenerative-agriculture" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Regenerative Agriculture" data-search="regenerative agriculture farming soil health water land degradation biodiversity crop rotation compost manure carbon greenhouse gas emissions intensive food nutrition">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Regenerative Agriculture</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/rɪˈdʒenərətɪv ˈæɡrɪkʌltʃə(r)/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Regenerative agriculture is a way of farming that nurtures and restores soil health, and therefore reduces water use, prevents land degradation, and promotes biodiversity. By minimizing land ploughing, practicing rotating crops, and using animal manure and compost, regenerative agriculture ensures that the soil stores more carbon, conserves more moisture, and is healthier due to thriving fungal communities.</p>
+                    <p>Intensive agriculture is responsible for a third of global greenhouse gas emissions, uses 70 percent of the fresh water we consume, and leads to soil degradation through its use of heavy machinery, chemical fertilizers, and pesticides. It is also the biggest contributor to biodiversity loss. By contrast, regenerative agriculture helps lower greenhouse gas emissions, conserves water, and restores land. Moreover, healthy soil produces more food and better nutrition and has other positive impacts on ecosystems and biodiversity.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-renewable-energy" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Renewable Energy" data-search="renewable energy wind sunlight solar water geothermal fossil fuels coal oil gas greenhouse gas emissions clean sustainable jobs electrification 1.5 degrees 2030">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Renewable Energy</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/rɪˈnjuːəbl ˈenədʒi/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Renewable energy is energy derived from natural sources that are constantly being replenished, such as wind, sunlight, the flow of moving water, and geothermal heat. In contrast to energy sourced from fossil fuels like coal, oil, and gas, which accounts for 75 percent of the harmful greenhouse gas emissions that are causing climate change, energy from renewable sources is cheap, clean, sustainable, and generates more jobs.</p>
+                    <p>Transitioning from fossil fuels to renewable energy in all sectors – power, heating and cooling, transportation, and industry – is key to addressing the climate crisis. To stay under 1.5°C of global warming, the world needs to immediately phase out fossil fuel use and undergo a profound transformation of the energy system through rapid electrification and sourcing energy from renewable sources.</p>
+                    <p>In 2022, renewable sources provided 29 percent of global electricity. With the right investments, electricity from renewable sources could provide 65 percent of the world's total electricity supply by 2030.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-resilience" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Resilience" data-search="resilience capacity community environment climate impacts anticipate manage recover transform disaster response early warning equity justice low-carbon">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Resilience</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/rɪˈzɪliəns/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Climate resilience is the capacity of a community or environment to anticipate and manage climate impacts, minimize their damage, and recover and transform as needed after the initial shock.</p>
+                    <p>To best safeguard societal wellbeing, economic activity, and the environment, people, communities, and governments need to be equipped to deal with the unavoidable impacts of climate change. This can be done by training people to obtain new skills and diversify the sources of their household income, building more robust disaster response and recovery capacities, enhancing climate information and early warning systems, and working on long-term planning, among others.</p>
+                    <p>Ultimately, a truly climate-resilient society is a low-carbon one, because drastically reducing greenhouse gas emissions is the best way to limit how severe climate impacts will be in the future. It is also a society based in equity and climate justice that prioritizes support for people and communities most exposed to climate impacts or least able to cope with them.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-rewilding" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Rewilding" data-search="rewilding restoration ecosystems conservation species reintroduction beavers wolves herbivores carbon dioxide woodland regeneration habitats wildlife biodiversity extinction">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Rewilding</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˌriːˈwaɪldɪŋ/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Rewilding is the mass restoration of ecosystems that have been damaged by human activity. More than conservation, which focuses on saving specific species through dedicated human intervention, rewilding refers to setting aside large areas for the natural world to regenerate in on its own terms. This sometimes requires the reintroduction of key species that have been driven extinct in a particular region, such as beavers, wolves, or large herbivores, who help shape entire ecosystems.</p>
+                    <p>Rewilding can help combat climate change by removing more carbon dioxide from the atmosphere through healthy natural processes such as natural woodland regeneration. It also helps prevent species extinction by creating nature-rich habitats that allow wildlife to adapt to climate change and migrate as warming intensifies.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- T -->
+        <section class="pd-letter-group" id="pd-letter-T" aria-label="Terms starting with T">
+            <h2 class="pd-letter-heading">T</h2>
+
+            <article class="pd-entry" id="pd-tipping-point" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Tipping Point" data-search="tipping point threshold irreversible global warming climate change ice sheets Greenland Antarctic sea level permafrost coral bleaching rainforests biodiversity">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Tipping Point</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈtɪpɪŋ pɔɪnt/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>A tipping point is a threshold after which certain changes caused by global warming and climate change become irreversible, even if future interventions are successful in driving down average global temperatures. These changes may lead to abrupt and dangerous impacts with very serious implications for the future of humanity and our planet.</p>
+                    <p>As the world gets hotter, several tipping points are becoming very likely. One of them is the collapse of the Greenland and West Antarctic ice sheets, which would lead to significant sea level rise and threaten coastal communities and ecosystems. Another is the thawing of the permafrost in the tundra regions, which will release huge quantities of trapped greenhouse gases, further accelerating global warming and climate change. Mass coral bleaching events and the destruction of rainforests are two other major tipping points with immense implications for both biodiversity and human societies.</p>
+                </div>
+            </article>
+
+            <article class="pd-entry" id="pd-transparency" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Transparency" data-search="transparency Paris Agreement reporting NDC nationally determined contributions data evidence-based trust collaboration knowledge ambition targets">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Transparency</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/trænsˈpærənsi/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Under the Paris Agreement, countries must regularly report on the implementation of their Nationally Determined Contributions. It is crucial that this reporting is done with transparency to allow the global community to accurately assess collective progress and build trust that everyone is playing their part.</p>
+                    <p>Transparent reporting allows governments and international bodies to have access to reliable data and make evidence-based decisions. It also enhances our scientific understanding of climate change and the actions and policies needed to mitigate it and adapt to its impacts.</p>
+                    <p>Ultimately, transparency is key to unlocking the full potential of the Paris Agreement, by promoting trust, collaboration and knowledge transfer and encouraging further ambition on climate targets.</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- U -->
+        <section class="pd-letter-group" id="pd-letter-U" aria-label="Terms starting with U">
+            <h2 class="pd-letter-heading">U</h2>
+
+            <article class="pd-entry" id="pd-unfccc" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="UNFCCC" data-search="UNFCCC United Nations Framework Convention on Climate Change treaty 1992 1994 Paris Agreement Kyoto Protocol secretariat COP negotiations NDC registry">
+                <h3 class="pd-entry-term" itemprop="name"><dfn><abbr title="United Nations Framework Convention on Climate Change">UNFCCC</abbr></dfn></h3>
+                <p class="pd-entry-meta">United Nations Framework Convention on Climate Change <span class="pd-pos">abbreviation</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>The United Nations Framework Convention on Climate Change (UNFCCC) is an international environmental treaty adopted in 1992 to combat dangerous human interference with the climate system. It entered into force in 1994 and enjoys near universal membership, having been signed by 198 parties. It is the parent treaty of both the Paris Agreement and the Kyoto Protocol.</p>
+                    <p>The UNFCCC secretariat is the United Nations entity tasked with supporting the global response to the threat of climate change. The secretariat facilitates intergovernmental climate change negotiations by organizing between two and four negotiating sessions each year, the largest and most important of which is the Conference of the Parties (COP). It also provides technical expertise and assists in the analysis and review of climate change information and maintains the registry of Nationally Determined Contributions (NDC).</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- W -->
+        <section class="pd-letter-group" id="pd-letter-W" aria-label="Terms starting with W">
+            <h2 class="pd-letter-heading">W</h2>
+
+            <article class="pd-entry" id="pd-weather-vs-climate" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="Weather vs. Climate" data-search="weather climate atmospheric conditions temperature humidity precipitation wind 30 years average industrial greenhouse gases">
+                <h3 class="pd-entry-term" itemprop="name"><dfn>Weather vs. Climate</dfn></h3>
+                <p class="pd-entry-meta"><span aria-label="pronunciation">/ˈweðə(r)/</span> — <span aria-label="pronunciation">/ˈklaɪmət/</span> <span class="pd-pos">noun</span></p>
+                <div class="pd-entry-body" itemprop="description">
+                    <p>Weather refers to atmospheric conditions at a particular time in a particular location, including temperature, humidity, precipitation, cloudiness, wind, and visibility. Weather conditions do not happen in isolation, they have a ripple effect. The weather in one region will eventually affect the weather hundreds or thousands of kilometers away.</p>
+                    <p>Climate is the average of weather patterns in a specific area over a longer period of time, usually 30 or more years, that represents the overall state of the climate system.</p>
+                    <p>Human activity in the industrial age, and particularly during the last century, is significantly altering our planet's climate through the release of harmful greenhouse gases.</p>
+                </div>
+            </article>
+        </section>
+
+    </div>
+
+    <div class="pd-no-results" id="pd-no-results" role="status">
+        <p>No terms found matching "<span class="pd-no-results-term" id="pd-no-results-term"></span>"</p>
+        <p class="pd-suggestion">Try a different spelling or browse the alphabetical index above.</p>
+    </div>
+</div>
+
+
+<a href="#peace-dictionary" class="pd-back-to-top">Return to top</a>
+
+</div>
+
+<script>
+(function () {
+    'use strict';
+
+    var root = document.getElementById('peace-dictionary');
+    if (!root) return;
+
+    var entries = root.querySelectorAll('.pd-entry');
+    var groups = root.querySelectorAll('.pd-letter-group');
+    var searchInput = document.getElementById('pd-search-field');
+    var clearBtn = document.getElementById('pd-search-clear');
+    var infoEl = document.getElementById('pd-search-info');
+    var noResults = document.getElementById('pd-no-results');
+    var noResultsTerm = document.getElementById('pd-no-results-term');
+    var alphaNav = document.getElementById('pd-alpha-nav');
+    var debounceTimer;
+
+    // Build alpha nav
+    var activeLetters = {};
+    groups.forEach(function (g) {
+        var letter = g.id.replace('pd-letter-', '');
+        activeLetters[letter] = true;
+    });
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(function (letter) {
+        var a = document.createElement('a');
+        a.textContent = letter;
+        if (activeLetters[letter]) {
+            a.href = '#pd-letter-' + letter;
+        } else {
+            a.classList.add('disabled');
+            a.setAttribute('aria-disabled', 'true');
+        }
+        alphaNav.appendChild(a);
+    });
+
+    // Bigram similarity for fuzzy matching
+    function getBigrams(str) {
+        var s = str.toLowerCase().trim();
+        var bigrams = [];
+        for (var i = 0; i < s.length - 1; i++) {
+            bigrams.push(s.substring(i, i + 2));
+        }
+        return bigrams;
+    }
+
+    function bigramSimilarity(a, b) {
+        if (!a || !b) return 0;
+        var aBigrams = getBigrams(a);
+        var bBigrams = getBigrams(b);
+        if (aBigrams.length === 0 || bBigrams.length === 0) return 0;
+        var bSet = {};
+        bBigrams.forEach(function (bg) {
+            bSet[bg] = (bSet[bg] || 0) + 1;
+        });
+        var matches = 0;
+        aBigrams.forEach(function (bg) {
+            if (bSet[bg] && bSet[bg] > 0) {
+                matches++;
+                bSet[bg]--;
+            }
+        });
+        return (2.0 * matches) / (aBigrams.length + bBigrams.length);
+    }
+
+    var stopWords = {a:1,an:1,and:1,are:1,as:1,at:1,be:1,by:1,do:1,for:1,from:1,has:1,have:1,he:1,her:1,his:1,i:1,if:1,in:1,is:1,it:1,its:1,my:1,no:1,not:1,of:1,on:1,or:1,our:1,she:1,so:1,that:1,the:1,their:1,them:1,then:1,there:1,these:1,they:1,this:1,to:1,up:1,us:1,was:1,we:1,will:1,with:1,you:1,your:1};
+
+    function scoreEntry(entry, query) {
+        var term = (entry.getAttribute('data-term') || '').toLowerCase();
+        var search = (entry.getAttribute('data-search') || '').toLowerCase();
+        var body = entry.querySelector('.pd-entry-body').textContent.toLowerCase();
+        var q = query.toLowerCase().trim();
+        var tokens = q.split(/\s+/).filter(function (t) { return t && !stopWords[t]; });
+        if (tokens.length === 0) return 0;
+        var score = 0;
+
+        // Title matches weighted heavily
+        if (term === q) score += 200;
+        else if (term.indexOf(q) === 0) score += 180;
+        else if (term.indexOf(q) !== -1) score += 150;
+
+        // Per-token title hits
+        var termHits = 0;
+        tokens.forEach(function (t) {
+            if (term.indexOf(t) !== -1) termHits++;
+        });
+        score += termHits * 30;
+
+        // Search keyword matches
+        var searchHits = 0;
+        tokens.forEach(function (t) {
+            if (search.indexOf(t) !== -1) searchHits++;
+        });
+        score += searchHits * 10;
+
+        // Body text matches
+        var bodyHits = 0;
+        tokens.forEach(function (t) {
+            if (body.indexOf(t) !== -1) bodyHits++;
+        });
+        score += bodyHits * 5;
+
+        // Fuzzy matching against title words (weighted higher than keywords)
+        if (score === 0) {
+            var termWords = term.split(/\s+/);
+            var maxTermSim = 0;
+            var maxSearchSim = 0;
+            tokens.forEach(function (t) {
+                termWords.forEach(function (tw) {
+                    var sim = bigramSimilarity(t, tw);
+                    if (sim > maxTermSim) maxTermSim = sim;
+                });
+                search.split(/\s+/).forEach(function (sw) {
+                    var sim = bigramSimilarity(t, sw);
+                    if (sim > maxSearchSim) maxSearchSim = sim;
+                });
+            });
+            if (maxTermSim >= 0.65) score += Math.round(maxTermSim * 60);
+            if (maxSearchSim >= 0.65) score += Math.round(maxSearchSim * 20);
+        }
+
+        return score;
+    }
+
+    // Store each entry's original section for restoring later
+    var entryHome = [];
+    entries.forEach(function (entry) {
+        entryHome.push({ entry: entry, section: entry.parentNode });
+    });
+    var termsContainer = document.getElementById('pd-terms');
+
+    function restoreGroups() {
+        entryHome.forEach(function (item) {
+            item.section.appendChild(item.entry);
+        });
+        Array.prototype.slice.call(groups).sort(function (a, b) {
+            return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+        }).forEach(function (g) { termsContainer.appendChild(g); });
+        groups.forEach(function (g) { g.classList.remove('pd-hidden'); });
+        entries.forEach(function (e) { e.classList.remove('pd-hidden'); });
+    }
+
+    function performSearch() {
+        var query = searchInput.value.trim();
+        clearBtn.style.display = query ? 'block' : 'none';
+
+        if (!query) {
+            restoreGroups();
+            noResults.style.display = 'none';
+            infoEl.textContent = '';
+            // removeHighlights();
+            return;
+        }
+
+        // removeHighlights();
+
+        var threshold = 10;
+        var visible = 0;
+        var scored = [];
+
+        entries.forEach(function (entry) {
+            var s = scoreEntry(entry, query);
+            scored.push({ entry: entry, score: s });
+            if (s >= threshold) visible++;
+        });
+
+        // Hide letter groups entirely during search
+        groups.forEach(function (g) { g.classList.add('pd-hidden'); });
+
+        // Sort by relevance and append matching entries flat into the container
+        scored.sort(function (a, b) { return b.score - a.score; });
+        /* Show only the top result — uncomment the block below to restore multi-result display
+        scored.forEach(function (item) {
+            if (item.score >= threshold) {
+                item.entry.classList.remove('pd-hidden');
+                termsContainer.appendChild(item.entry);
+            } else {
+                item.entry.classList.add('pd-hidden');
+            }
+        });
+        */
+        var shown = 0;
+        scored.forEach(function (item) {
+            if (item.score >= threshold && shown < 3) {
+                item.entry.classList.remove('pd-hidden');
+                termsContainer.appendChild(item.entry);
+                shown++;
+            } else {
+                item.entry.classList.add('pd-hidden');
+            }
+        });
+        visible = shown;
+
+        if (visible === 0) {
+            noResults.style.display = 'block';
+            noResultsTerm.textContent = query;
+            infoEl.textContent = 'No results';
+        } else {
+            noResults.style.display = 'none';
+            infoEl.textContent = visible + ' match' + (visible !== 1 ? 'es' : '') + ' found';
+            // highlightMatches(query);
+        }
+
+        // Scroll so the first results are visible
+        var firstVisible = termsContainer.querySelector('.pd-entry:not(.pd-hidden)');
+        if (firstVisible) firstVisible.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function highlightMatches(query) {
+        var tokens = query.toLowerCase().split(/\s+/).filter(function (t) { return t && !stopWords[t]; });
+        entries.forEach(function (entry) {
+            if (entry.classList.contains('pd-hidden')) return;
+            var termEl = entry.querySelector('.pd-entry-term dfn');
+            if (termEl) highlightText(termEl, tokens);
+            var bodyEl = entry.querySelector('.pd-entry-body');
+            if (bodyEl) highlightText(bodyEl, tokens);
+        });
+    }
+
+    function highlightText(el, tokens) {
+        var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+        var textNodes = [];
+        while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+        textNodes.forEach(function (node) {
+            var text = node.textContent;
+            var lower = text.toLowerCase();
+            var lastIdx = 0;
+            var matches = [];
+
+            tokens.forEach(function (token) {
+                var idx = lower.indexOf(token);
+                while (idx !== -1) {
+                    matches.push({ start: idx, end: idx + token.length });
+                    idx = lower.indexOf(token, idx + 1);
+                }
+            });
+
+            if (matches.length === 0) return;
+            matches.sort(function (a, b) { return a.start - b.start; });
+
+            var merged = [matches[0]];
+            for (var i = 1; i < matches.length; i++) {
+                var last = merged[merged.length - 1];
+                if (matches[i].start <= last.end) {
+                    last.end = Math.max(last.end, matches[i].end);
+                } else {
+                    merged.push(matches[i]);
+                }
+            }
+
+            var frag = document.createDocumentFragment();
+            merged.forEach(function (m) {
+                if (m.start > lastIdx) frag.appendChild(document.createTextNode(text.substring(lastIdx, m.start)));
+                var mark = document.createElement('mark');
+                mark.textContent = text.substring(m.start, m.end);
+                frag.appendChild(mark);
+                lastIdx = m.end;
+            });
+            if (lastIdx < text.length) frag.appendChild(document.createTextNode(text.substring(lastIdx)));
+            node.parentNode.replaceChild(frag, node);
+        });
+    }
+
+    function removeHighlights() {
+        root.querySelectorAll('.pd-entry-term mark, .pd-entry-body mark').forEach(function (mark) {
+            var parent = mark.parentNode;
+            parent.replaceChild(document.createTextNode(mark.textContent), mark);
+            parent.normalize();
+        });
+    }
+
+    // Toggle shadow when search bar becomes sticky
+    var searchEl = document.querySelector('.pd-search');
+    var sentinel = document.createElement('div');
+    sentinel.style.height = '1px';
+    sentinel.style.marginBottom = '-1px';
+    searchEl.parentNode.insertBefore(sentinel, searchEl);
+    if (window.IntersectionObserver) {
+        var observer = new IntersectionObserver(function (entries) {
+            searchEl.classList.toggle('pd-stuck', !entries[0].isIntersecting);
+        }, { threshold: 0, rootMargin: '-36px 0px 0px 0px' });
+        observer.observe(sentinel);
+    }
+
+    // Internal term links: clear search so target entry is visible
+    root.addEventListener('click', function (e) {
+        var link = e.target.closest('a[href^="#pd-"]');
+        if (!link) return;
+        if (searchInput.value.trim()) {
+            e.preventDefault();
+            searchInput.value = '';
+            performSearch();
+            var target = document.querySelector(link.getAttribute('href'));
+            if (target) {
+                setTimeout(function () {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+            }
+        }
+    });
+
+    searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(performSearch, 200);
+    });
+
+    clearBtn.addEventListener('click', function () {
+        searchInput.value = '';
+        performSearch();
+        searchInput.focus();
+    });
+
+    alphaNav.addEventListener('click', function () {
+        if (searchInput.value.trim()) {
+            searchInput.value = '';
+            performSearch();
+        }
+    });
+
+    // Build JSON-LD from the DOM
+    var pageUrl = window.location.href.split('#')[0];
+    var defined = [];
+    var faqEntries = [];
+
+    entries.forEach(function (entry) {
+        var name = entry.getAttribute('data-term') || '';
+        var bodyEl = entry.querySelector('.pd-entry-body');
+        var firstP = bodyEl ? bodyEl.querySelector('p') : null;
+        if (name && firstP) {
+            defined.push({
+                '@type': 'DefinedTerm',
+                'name': name,
+                'description': firstP.textContent.trim(),
+                'url': pageUrl + '#' + entry.id
+            });
+        }
+        // Collect FAQ pairs from Q&A accordion sections
+        var qaPairs = entry.querySelectorAll('.pd-details-body p strong');
+        qaPairs.forEach(function (strong) {
+            var question = strong.textContent.trim();
+            var parent = strong.parentNode;
+            var br = parent.querySelector('br');
+            if (br && br.nextSibling) {
+                var answer = '';
+                var node = br.nextSibling;
+                while (node) {
+                    answer += node.textContent;
+                    node = node.nextSibling;
+                }
+                answer = answer.trim();
+                if (question && answer) {
+                    faqEntries.push({
+                        '@type': 'Question',
+                        'name': question,
+                        'acceptedAnswer': {
+                            '@type': 'Answer',
+                            'text': answer
+                        }
+                    });
+                }
+            }
+        });
+    });
+
+    var ldData = [{
+        '@context': 'https://schema.org',
+        '@type': 'DefinedTermSet',
+        'name': 'The Peace Dictionary',
+        'description': 'A comprehensive glossary of peace and security terminology from the United Nations, covering key terms to help understand the language of diplomacy, peacebuilding, and conflict resolution.',
+        'url': pageUrl,
+        'mainEntityOfPage': {
+            '@type': 'WebPage',
+            '@id': pageUrl
+        },
+        'publisher': {
+            '@type': 'Organization',
+            'name': 'United Nations',
+            'url': 'https://www.un.org'
+        },
+        'inLanguage': 'en',
+        'datePublished': '2026-04-01',
+        'dateModified': new Date().toISOString().split('T')[0],
+        'hasDefinedTerm': defined
+    }];
+
+    if (faqEntries.length > 0) {
+        ldData.push({
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            'mainEntity': faqEntries
+        });
+    }
+
+    var ldEl = document.getElementById('pd-ld-json');
+    if (ldEl) {
+        ldEl.textContent = JSON.stringify(ldData);
+    }
+})();
+</script>
