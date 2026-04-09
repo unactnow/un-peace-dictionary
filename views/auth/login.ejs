@@ -45,8 +45,8 @@
         <form method="POST" action="/auth/login">
             <input type="hidden" name="_csrf_token" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
             <div class="form-row">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required autofocus>
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required autofocus autocomplete="username">
             </div>
             <div class="form-row">
                 <label for="password">Password</label>

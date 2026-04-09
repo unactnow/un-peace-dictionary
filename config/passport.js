@@ -4,13 +4,18 @@ const { User } = require('../models');
 
 module.exports = function(passport) {
   passport.use(
-    new LocalStrategy({ usernameField: 'username' }, async (username, password, done) => {
+    new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
       try {
-        const user = await User.findOne({ where: { username } });
-        if (!user) return done(null, false, { message: 'Username not found' });
+        const normalized = (email || '').trim().toLowerCase();
+        const user = await User.findOne({ where: { email: normalized } });
+        if (!user) {
+          return done(null, false, { message: 'Invalid email or password' });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
-        return isMatch ? done(null, user) : done(null, false, { message: 'Incorrect password' });
+        return isMatch
+          ? done(null, user)
+          : done(null, false, { message: 'Invalid email or password' });
       } catch (err) {
         return done(err);
       }
