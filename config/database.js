@@ -1,6 +1,7 @@
 const { Sequelize } = require('sequelize');
+const { getDatabaseUrl } = require('./database-url');
 
-const dbUrl = process.env.DATABASE_URL;
+const dbUrl = getDatabaseUrl();
 if (!dbUrl) {
   throw new Error('DATABASE_URL environment variable is required');
 }
