@@ -351,7 +351,7 @@ function generateDictionaryHTML(terms, settings = {}) {
   return `<!-- Peace Dictionary export -->
 <script id="pd-ld-json" type="application/ld+json">${jsonLd}</script>
 
-<link href="https://cdn.jsdelivr.net/gh/robertirish/un-peace-and-security-stylesheet@main/styles.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/gh/unactnow/un-stylesheet@main/styles.css" rel="stylesheet">
 
 <style>
 ${PD_CSS}
