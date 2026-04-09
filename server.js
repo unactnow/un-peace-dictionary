@@ -8,7 +8,8 @@ const helmet = require('helmet');
 const path = require('path');
 const crypto = require('crypto');
 const { marked } = require('./helpers/markedConfig');
-const { sequelize, Setting } = require('./models');
+const { getDatabaseUrl } = require('./config/database-url');
+const { sequelize, authSequelize, Setting } = require('./models');
 
 const app = express();
 
@@ -50,7 +51,7 @@ if (process.env.DATABASE_URL) {
   const { Pool } = require('pg');
   sessionConfig.store = new pgSession({
     pool: new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: getDatabaseUrl(),
       ssl: { rejectUnauthorized: false },
     }),
     tableName: 'session',
@@ -123,7 +124,14 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
-sequelize.sync()
+function syncDatabases() {
+  if (authSequelize === sequelize) {
+    return sequelize.sync();
+  }
+  return Promise.all([sequelize.sync(), authSequelize.sync()]);
+}
+
+syncDatabases()
   .then(() => console.log('Database connected and synced'))
   .catch((err) => console.error('Database connection error:', err.message));
 
