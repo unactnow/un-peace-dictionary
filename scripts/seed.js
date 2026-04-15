@@ -7,7 +7,7 @@
  */
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
-const { sequelize, authSequelize, User, Setting, Term, AccordionSection, ExternalLink } = require('../models');
+const { sequelize, authSequelize, User, Setting, Term, AccordionSection } = require('../models');
 
 async function seed() {
   if (authSequelize === sequelize) {
@@ -59,34 +59,29 @@ async function seed() {
   if (termCount === 0) {
     const peacebuilding = await Term.create({
       name: 'Peacebuilding',
-      abbreviation: '',
       slug: 'peacebuilding',
-      pronunciation: '/ˈpiːsˌbɪldɪŋ/',
-      partOfSpeech: 'noun',
-      leadDefinition:
-        'Activities and structures that **prevent**, **reduce**, or **transform** violence and support lasting peace.',
-      searchKeywords: 'peacebuilding, peace, conflict',
+      searchKeywords: 'peacebuilding peace conflict',
     });
     await AccordionSection.create({
       termId: peacebuilding.id,
-      title: 'In simple terms',
-      body: 'Efforts to help societies recover from conflict and avoid returning to it.',
+      title: 'Questions people ask about \u201cpeacebuilding\u201d',
+      body: JSON.stringify([
+        { q: 'What is peacebuilding?', a: 'Activities and structures that prevent, reduce, or transform violence and support lasting peace.' },
+        { q: 'How does peacebuilding work?', a: 'Efforts to help societies recover from conflict and avoid returning to it.' },
+      ]),
       sortOrder: 0,
     });
     const prevention = await Term.create({
       name: 'Conflict prevention',
-      abbreviation: '',
       slug: 'conflict-prevention',
-      pronunciation: '',
-      partOfSpeech: 'noun',
-      leadDefinition:
-        'Measures to identify and address causes of conflict before violence erupts. See also [[Peacebuilding]].',
-      searchKeywords: 'prevention, conflict',
+      searchKeywords: 'prevention conflict',
     });
-    await ExternalLink.create({
+    await AccordionSection.create({
       termId: prevention.id,
-      text: 'UN Peace and Security',
-      url: 'https://www.un.org/en/peaceandsecurity',
+      title: 'Questions people ask about \u201cconflict prevention\u201d',
+      body: JSON.stringify([
+        { q: 'What is conflict prevention?', a: 'Measures to identify and address causes of conflict before violence erupts. See also [[Peacebuilding]].' },
+      ]),
       sortOrder: 0,
     });
     await peacebuilding.setRelatedTerms([prevention.id]);

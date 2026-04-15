@@ -1,5 +1,5 @@
 const express = require('express');
-const { Term, AccordionSection, ExternalLink, Setting } = require('../models');
+const { Term, AccordionSection, Setting } = require('../models');
 const { ensureAuthenticated } = require('../middleware/auth');
 const { generateDictionaryHTML } = require('../helpers/export');
 
@@ -14,12 +14,6 @@ async function loadTermsForExport() {
       {
         model: AccordionSection,
         as: 'sections',
-        separate: true,
-        order: [['sortOrder', 'ASC']],
-      },
-      {
-        model: ExternalLink,
-        as: 'externalLinks',
         separate: true,
         order: [['sortOrder', 'ASC']],
       },

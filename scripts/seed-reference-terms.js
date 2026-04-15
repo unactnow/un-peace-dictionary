@@ -13,28 +13,6 @@ const { sequelize, Term, AccordionSection, ExternalLink, TermRelationship } = re
 
 const HTML_PATH = path.resolve(__dirname, '../../un-peace-dictionary/index.html');
 
-function htmlToMarkdown(html) {
-  if (!html) return '';
-  let md = html;
-  md = md.replace(/<strong>([\s\S]*?)<\/strong>/gi, '**$1**');
-  md = md.replace(/<a\s+href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)');
-  md = md.replace(/<br\s*\/?>/gi, '\n');
-  md = md.replace(/<li>([\s\S]*?)<\/li>/gi, '- $1\n');
-  md = md.replace(/<\/?ul[^>]*>/gi, '\n');
-  md = md.replace(/<\/?p[^>]*>/gi, '\n\n');
-  md = md.replace(/<[^>]+>/g, '');
-  md = md.replace(/&hellip;/g, '…');
-  md = md.replace(/&amp;/g, '&');
-  md = md.replace(/&lt;/g, '<');
-  md = md.replace(/&gt;/g, '>');
-  md = md.replace(/&quot;/g, '"');
-  md = md.replace(/&#39;/g, "'");
-  md = md.replace(/&times;/g, '×');
-  md = md.replace(/\u00A0/g, ' ');
-  md = md.replace(/\n{3,}/g, '\n\n');
-  return md.trim();
-}
-
 function extractArticles(html) {
   const articles = [];
   const articleRe = /<article\s+class="pd-entry"[^>]*id="pd-([^"]+)"[^>]*data-term="([^"]+)"[^>]*data-search="([^"]*)"[^>]*>([\s\S]*?)<\/article>/gi;
@@ -45,31 +23,12 @@ function extractArticles(html) {
     const searchKeywords = m[3];
     const body = m[4];
 
-    let abbreviation = '';
-    const abbrMatch = body.match(/<abbr\s+title="([^"]+)"/i);
-    if (abbrMatch) abbreviation = abbrMatch[1];
-
-    let pronunciation = '';
-    const pronMatches = [...body.matchAll(/<span\s+aria-label="pronunciation">([^<]+)<\/span>/gi)];
-    if (pronMatches.length > 0) {
-      pronunciation = pronMatches.map(pm => pm[1].trim()).join(' — ');
-    }
-
-    let partOfSpeech = 'noun';
-    const posMatch = body.match(/<span\s+class="pd-pos">([^<]+)<\/span>/i);
-    if (posMatch) partOfSpeech = posMatch[1].trim();
-
-    const entryBodyMatch = body.match(/<div\s+class="pd-entry-body"[^>]*>([\s\S]*?)$/i);
-    if (!entryBodyMatch) continue;
-    let entryBody = entryBodyMatch[1];
-
-    const sections = [];
-    const externalLinks = [];
+    const qaPairs = [];
     const relatedSlugs = [];
 
     const detailsRe = /<details[^>]*>\s*<summary>([\s\S]*?)<\/summary>\s*<div\s+class="pd-details-body[^"]*">([\s\S]*?)<\/div>\s*<\/details>/gi;
     let dm;
-    while ((dm = detailsRe.exec(entryBody)) !== null) {
+    while ((dm = detailsRe.exec(body)) !== null) {
       const summaryTitle = dm[1].replace(/<[^>]+>/g, '').trim();
       const detailsBody = dm[2];
 
@@ -79,31 +38,22 @@ function extractArticles(html) {
         while ((rm = relRe.exec(detailsBody)) !== null) {
           relatedSlugs.push(rm[1]);
         }
-      } else if (summaryTitle === 'Learn more') {
-        const linkRe = /<li><a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a><\/li>/gi;
-        let lm;
-        while ((lm = linkRe.exec(detailsBody)) !== null) {
-          externalLinks.push({ text: lm[2].replace(/<[^>]+>/g, '').trim(), url: lm[1].trim() });
+      } else if (summaryTitle.toLowerCase().startsWith('questions people ask')) {
+        const pairRe = /<p><strong>([\s\S]*?)<\/strong><\/p>\s*([\s\S]*?)(?=<p><strong>|$)/gi;
+        let pm;
+        while ((pm = pairRe.exec(detailsBody)) !== null) {
+          const q = pm[1].replace(/<[^>]+>/g, '').trim();
+          const a = pm[2].trim();
+          if (q) qaPairs.push({ q, a });
         }
-      } else {
-        sections.push({ title: summaryTitle, body: htmlToMarkdown(detailsBody) });
       }
     }
-
-    let leadHtml = entryBody.replace(/<details[\s\S]*?<\/details>/gi, '').trim();
-    leadHtml = leadHtml.replace(/<\/div>\s*$/, '').trim();
-    const leadDefinition = htmlToMarkdown(leadHtml);
 
     articles.push({
       name: termName,
       slug,
-      abbreviation,
-      pronunciation,
-      partOfSpeech,
-      leadDefinition,
       searchKeywords,
-      sections,
-      externalLinks,
+      qaPairs,
       relatedSlugs,
     });
   }
@@ -133,33 +83,21 @@ async function run() {
     const term = await Term.create({
       name: a.name,
       slug: a.slug,
-      abbreviation: a.abbreviation,
-      pronunciation: a.pronunciation,
-      partOfSpeech: a.partOfSpeech,
-      leadDefinition: a.leadDefinition,
       searchKeywords: a.searchKeywords,
     });
     termMap[a.slug] = term;
 
-    for (let i = 0; i < a.sections.length; i++) {
+    if (a.qaPairs.length > 0) {
+      const title = `Questions people ask about \u201c${a.name.toLowerCase()}\u201d`;
       await AccordionSection.create({
         termId: term.id,
-        title: a.sections[i].title,
-        body: a.sections[i].body,
-        sortOrder: i,
+        title,
+        body: JSON.stringify(a.qaPairs),
+        sortOrder: 0,
       });
     }
 
-    for (let i = 0; i < a.externalLinks.length; i++) {
-      await ExternalLink.create({
-        termId: term.id,
-        text: a.externalLinks[i].text,
-        url: a.externalLinks[i].url,
-        sortOrder: i,
-      });
-    }
-
-    console.log(`  + ${a.name} (${a.sections.length} sections, ${a.externalLinks.length} links)`);
+    console.log(`  + ${a.name} (${a.qaPairs.length} Q&A pairs)`);
   }
 
   for (const a of articles) {

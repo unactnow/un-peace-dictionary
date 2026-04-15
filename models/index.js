@@ -84,11 +84,7 @@ const Setting = sequelize.define('Setting', {
 const Term = sequelize.define('Term', {
   id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
   name: { type: DataTypes.STRING, allowNull: false },
-  abbreviation: { type: DataTypes.STRING, defaultValue: '' },
   slug: { type: DataTypes.STRING, allowNull: false, unique: true },
-  pronunciation: { type: DataTypes.STRING, defaultValue: '' },
-  partOfSpeech: { type: DataTypes.STRING, defaultValue: 'noun' },
-  leadDefinition: { type: DataTypes.TEXT, allowNull: false },
   searchKeywords: { type: DataTypes.TEXT, defaultValue: '' },
 }, { tableName: 'terms', timestamps: true });
 

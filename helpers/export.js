@@ -98,12 +98,6 @@ function markdownToHtml(md, termLookup) {
   return contentToHtml(md, termLookup);
 }
 
-function firstParagraphPlain(html) {
-  const m = String(html).match(/<p[^>]*>([\s\S]*?)<\/p>/i);
-  if (!m) return '';
-  return m[1].replace(/<[^>]+>/g, '').trim();
-}
-
 function buildDataSearch(term) {
   const parts = [
     term.slug.replace(/-/g, ' '),
@@ -121,42 +115,12 @@ function buildDataSearch(term) {
   return out.join(' ');
 }
 
-function extractFaqFromRenderedHtml(html) {
-  const faqs = [];
-  const re = /<p><strong>([^<]+)<\/strong><br\s*\/?>\s*([\s\S]*?)<\/p>/gi;
-  let m;
-  while ((m = re.exec(html)) !== null) {
-    const q = m[1].trim();
-    const a = m[2].replace(/<[^>]+>/g, '').trim();
-    if (q && a) faqs.push({ question: q, answer: a });
-  }
-  return faqs;
-}
-
 function renderTermArticle(term, termLookup) {
   const sections = (term.sections || []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
-  const links = (term.externalLinks || []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
   const related = term.relatedTerms || [];
 
-  let titleHtml;
-  if (term.abbreviation) {
-    titleHtml = `<dfn><abbr title="${escapeHtml(term.abbreviation)}">${escapeHtml(term.name)}</abbr></dfn>`;
-  } else {
-    titleHtml = `<dfn>${escapeHtml(term.name)}</dfn>`;
-  }
-
-  let metaHtml;
-  if (term.abbreviation) {
-    metaHtml = `<p class="pd-entry-meta">${escapeHtml(term.abbreviation)} <span class="pd-pos">${escapeHtml(term.partOfSpeech || 'abbreviation')}</span></p>`;
-  } else {
-    const pron = term.pronunciation
-      ? `<span aria-label="pronunciation">${escapeHtml(term.pronunciation)}</span>`
-      : '';
-    metaHtml = `<p class="pd-entry-meta">${pron}${pron ? ' ' : ''}<span class="pd-pos">${escapeHtml(term.partOfSpeech || 'noun')}</span></p>`;
-  }
-
-  const leadMd = markdownToHtml(term.leadDefinition, termLookup);
-  let bodyInner = leadMd;
+  const titleHtml = `<dfn>${escapeHtml(term.name)}</dfn>`;
+  let bodyInner = '';
 
   sections.forEach((sec) => {
     let sectionBodyHtml;
@@ -201,24 +165,8 @@ function renderTermArticle(term, termLookup) {
                     </details>`;
   }
 
-  if (links.length > 0) {
-    const lis = links
-      .map((l) => `<li><a href="${escapeHtml(l.url)}" rel="noopener">${escapeHtml(l.text)}</a></li>`)
-      .join('\n                                ');
-    bodyInner += `
-                    <details>
-                        <summary>Learn more</summary>
-                        <div class="pd-details-body pd-learn-more">
-                            <ul>
-                                ${lis}
-                            </ul>
-                        </div>
-                    </details>`;
-  }
-
   return `<article class="pd-entry" id="pd-${escapeHtml(term.slug)}" itemscope itemtype="https://schema.org/DefinedTerm" itemprop="hasDefinedTerm" data-term="${escapeHtml(term.name)}" data-search="${escapeHtml(buildDataSearch(term))}">
                 <h3 class="pd-entry-term" itemprop="name">${titleHtml}</h3>
-                ${metaHtml}
                 <div class="pd-entry-body" itemprop="description">
                     ${bodyInner}
                 </div>
@@ -227,19 +175,14 @@ function renderTermArticle(term, termLookup) {
 
 function buildJsonLd(terms, pageUrl, dateModified) {
   const base = pageUrl.replace(/#.*$/, '');
-  const defined = terms.map((t) => {
-    const leadHtml = markdownToHtml(t.leadDefinition, buildTermLookup(terms));
-    const desc = firstParagraphPlain(leadHtml) || t.name;
-    return {
-      '@type': 'DefinedTerm',
-      name: t.name,
-      description: desc,
-      url: `${base}#pd-${t.slug}`,
-    };
-  });
+  const defined = terms.map((t) => ({
+    '@type': 'DefinedTerm',
+    name: t.name,
+    description: t.name,
+    url: `${base}#pd-${t.slug}`,
+  }));
 
   const allFaqs = [];
-  const termLookup = buildTermLookup(terms);
   terms.forEach((t) => {
     (t.sections || []).forEach((sec) => {
       const isQa = (sec.title || '').toLowerCase().startsWith('questions people ask');
@@ -258,10 +201,6 @@ function buildJsonLd(terms, pageUrl, dateModified) {
             });
           }
         } catch (e) { /* not JSON */ }
-      }
-      if (!isQa) {
-        const bodyHtml = markdownToHtml(sec.body, termLookup);
-        extractFaqFromRenderedHtml(bodyHtml).forEach((f) => allFaqs.push(f));
       }
     });
   });

@@ -1,17 +1,10 @@
-/**
- * Field-by-field comparison for revision view (plan Section 6: term-revision-view.ejs).
- */
 function buildRevisionFieldDiff(snapshot, current) {
   const snap = snapshot || {};
   const cur = current || {};
 
   const scalarFields = [
     ['name', 'Name'],
-    ['abbreviation', 'Abbreviation'],
     ['slug', 'Slug'],
-    ['pronunciation', 'Pronunciation'],
-    ['partOfSpeech', 'Part of speech'],
-    ['leadDefinition', 'Lead definition'],
     ['searchKeywords', 'Search keywords'],
   ];
 
@@ -25,19 +18,10 @@ function buildRevisionFieldDiff(snapshot, current) {
   const secB = JSON.stringify(snap.sections || [], null, 2);
   const secA = JSON.stringify(cur.sections || [], null, 2);
   rows.push({
-    label: 'Accordion sections',
+    label: 'Questions (sections)',
     before: secB,
     after: secA,
     changed: secB !== secA,
-  });
-
-  const linkB = JSON.stringify(snap.externalLinks || [], null, 2);
-  const linkA = JSON.stringify(cur.externalLinks || [], null, 2);
-  rows.push({
-    label: 'External links',
-    before: linkB,
-    after: linkA,
-    changed: linkB !== linkA,
   });
 
   const relB = JSON.stringify(snap.relatedTermIds || []);
