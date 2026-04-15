@@ -24,6 +24,12 @@
         <% } %>
 
         <div class="form-row">
+            <label>Definition *</label>
+            <textarea id="lead_definition" name="lead_definition" class="pd-md" hidden><%= term ? term.leadDefinition : '' %></textarea>
+            <div class="quill-wrap" data-target="lead_definition"></div>
+        </div>
+
+        <div class="form-row">
             <label>Questions people ask <span class="hint" id="questions-suffix" style="font-weight:400;"></span></label>
             <p class="hint" style="margin-bottom:0.5rem;">Add common questions and their answers. Leave empty to skip.</p>
             <div id="qa-container">
@@ -164,6 +170,12 @@
     return html;
   }
 
+  document.querySelectorAll('.quill-wrap[data-target]').forEach(function (wrap) {
+    var targetId = wrap.getAttribute('data-target');
+    var ta = document.getElementById(targetId);
+    if (ta) initQuill(wrap, ta);
+  });
+
   document.querySelectorAll('.quill-wrap[data-qa-index]').forEach(function (wrap) {
     var ta = wrap.closest('.qa-pair').querySelector('textarea[name="qa_answer"]');
     if (ta) initQuill(wrap, ta, 'Answer text');
@@ -293,6 +305,10 @@
     html += '<h3 class="pd-entry-term"><dfn>' + escapeHtml(name) + '</dfn></h3>';
 
     html += '<div class="pd-entry-body">';
+
+    var leadTa = document.getElementById('lead_definition');
+    var lead = leadTa ? getEditorHtml(leadTa) : '';
+    if (lead) html += resolveWikiHtml(lead);
 
     var qaPairs = [];
     document.querySelectorAll('#qa-container .qa-pair').forEach(function (pair) {

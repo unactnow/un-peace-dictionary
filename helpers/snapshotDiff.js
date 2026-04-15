@@ -5,6 +5,7 @@ function buildRevisionFieldDiff(snapshot, current) {
   const scalarFields = [
     ['name', 'Name'],
     ['slug', 'Slug'],
+    ['leadDefinition', 'Definition'],
     ['searchKeywords', 'Search keywords'],
   ];
 

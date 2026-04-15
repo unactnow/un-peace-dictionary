@@ -64,7 +64,7 @@ async function resolveRelatedFromContent(termId, allTextFields) {
 }
 
 function gatherAllText(body) {
-  const texts = [];
+  const texts = [(body.lead_definition || '')];
   const questions = body.qa_question;
   const answers = body.qa_answer;
   if (questions) {
@@ -115,6 +115,7 @@ async function buildSnapshotObject(termId) {
   return {
     name: term.name,
     slug: term.slug,
+    leadDefinition: term.leadDefinition || '',
     searchKeywords: term.searchKeywords,
     sections: term.sections.map((s) => ({
       title: s.title,
@@ -166,7 +167,7 @@ router.get('/new', ensureAuthenticated, async (req, res) => {
 
 router.post('/new', ensureAuthenticated, async (req, res) => {
   try {
-    const { name, slug: formSlug } = req.body;
+    const { name, lead_definition, slug: formSlug } = req.body;
     const isAdmin = req.user && req.user.role === 'admin';
     const finalSlug = (isAdmin && formSlug && formSlug.trim()) ? slugify(formSlug.trim()) : slugify(name);
     const existing = await Term.findOne({ where: { slug: finalSlug } });
@@ -179,6 +180,7 @@ router.post('/new', ensureAuthenticated, async (req, res) => {
     const term = await Term.create({
       name: name.trim(),
       slug: finalSlug,
+      leadDefinition: lead_definition || '',
       searchKeywords: keywords,
     });
 
@@ -253,7 +255,7 @@ router.post('/:id/edit', ensureAuthenticated, async (req, res) => {
       });
     }
 
-    const { name, slug: formSlug } = req.body;
+    const { name, lead_definition, slug: formSlug } = req.body;
     const isAdmin = req.user && req.user.role === 'admin';
     const finalSlug = (isAdmin && formSlug && formSlug.trim()) ? slugify(formSlug.trim()) : slugify(name);
     const clash = await Term.findOne({ where: { slug: finalSlug, id: { [Op.ne]: term.id } } });
@@ -267,6 +269,7 @@ router.post('/:id/edit', ensureAuthenticated, async (req, res) => {
     await term.update({
       name: name.trim(),
       slug: finalSlug,
+      leadDefinition: lead_definition || '',
       searchKeywords: keywords,
     });
 
@@ -391,6 +394,7 @@ router.post('/:id/revisions/:revId/restore', ensureAuthenticated, async (req, re
     await term.update({
       name: snap.name || term.name,
       slug: snap.slug || term.slug,
+      leadDefinition: snap.leadDefinition != null ? snap.leadDefinition : term.leadDefinition,
       searchKeywords: snap.searchKeywords || '',
     });
 
@@ -430,6 +434,7 @@ router.get('/json/export', ensureAuthenticated, async (req, res) => {
     const payload = terms.map((t) => ({
       name: t.name,
       slug: t.slug,
+      leadDefinition: t.leadDefinition || '',
       searchKeywords: t.searchKeywords || '',
       sections: (t.sections || []).map((s) => ({ title: s.title, body: s.body, sortOrder: s.sortOrder })),
       relatedSlugs: (t.relatedTerms || []).map((r) => r.slug),
@@ -463,6 +468,7 @@ router.post('/json/import', ensureAuthenticated, express.json({ limit: '5mb' }),
       if (term) {
         await term.update({
           name: item.name,
+          leadDefinition: item.leadDefinition || '',
           searchKeywords: item.searchKeywords || '',
         });
         updated++;
@@ -470,6 +476,7 @@ router.post('/json/import', ensureAuthenticated, express.json({ limit: '5mb' }),
         term = await Term.create({
           name: item.name,
           slug: item.slug,
+          leadDefinition: item.leadDefinition || '',
           searchKeywords: item.searchKeywords || '',
         });
         created++;

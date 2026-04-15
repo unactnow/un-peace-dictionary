@@ -120,7 +120,8 @@ function renderTermArticle(term, termLookup) {
   const related = term.relatedTerms || [];
 
   const titleHtml = `<dfn>${escapeHtml(term.name)}</dfn>`;
-  let bodyInner = '';
+  const leadHtml = markdownToHtml(term.leadDefinition, termLookup);
+  let bodyInner = leadHtml;
 
   sections.forEach((sec) => {
     let sectionBodyHtml;
@@ -175,12 +176,18 @@ function renderTermArticle(term, termLookup) {
 
 function buildJsonLd(terms, pageUrl, dateModified) {
   const base = pageUrl.replace(/#.*$/, '');
-  const defined = terms.map((t) => ({
-    '@type': 'DefinedTerm',
-    name: t.name,
-    description: t.name,
-    url: `${base}#pd-${t.slug}`,
-  }));
+  const termLookup = buildTermLookup(terms);
+  const defined = terms.map((t) => {
+    const leadHtml = markdownToHtml(t.leadDefinition, termLookup);
+    const plainMatch = String(leadHtml).match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+    const desc = plainMatch ? plainMatch[1].replace(/<[^>]+>/g, '').trim() : '';
+    return {
+      '@type': 'DefinedTerm',
+      name: t.name,
+      description: desc || t.name,
+      url: `${base}#pd-${t.slug}`,
+    };
+  });
 
   const allFaqs = [];
   terms.forEach((t) => {
