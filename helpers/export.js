@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { marked } = require('./markedConfig');
 
+const { sanitizeRichText } = require('./sanitizeRichText');
+
 const PD_CSS = fs.readFileSync(path.join(__dirname, 'static', 'peace-dictionary.css'), 'utf8');
 const PD_JS = fs.readFileSync(path.join(__dirname, 'static', 'peace-dictionary.js'), 'utf8');
 
@@ -90,8 +92,8 @@ function cleanQuillListMarkup(html) {
 function contentToHtml(content, termLookup) {
   if (!content) return '';
   const resolved = resolveWikiLinks(content, termLookup);
-  if (isHtml(content)) return cleanQuillListMarkup(resolved);
-  return marked.parse(resolved, { async: false });
+  const html = isHtml(content) ? cleanQuillListMarkup(resolved) : marked.parse(resolved, { async: false });
+  return sanitizeRichText(html);
 }
 
 function markdownToHtml(md, termLookup) {

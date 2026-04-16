@@ -1,7 +1,7 @@
 {
   "name": "un-peace-dictionary",
   "version": "1.0.0",
-  "description": "Peace Dictionary CMS \u2014 Express, Vercel, Neon",
+  "description": "Peace Dictionary CMS — Express, Vercel, Neon",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -30,6 +30,7 @@
     "passport-local": "^1.0.0",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
+    "sanitize-html": "^2.17.3",
     "sequelize": "^6.35.2",
     "uuid": "^9.0.1"
   },

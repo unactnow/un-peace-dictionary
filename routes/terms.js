@@ -4,6 +4,7 @@ const { Term, AccordionSection, ExternalLink, TermRevision } = require('../model
 const { ensureAuthenticated } = require('../middleware/auth');
 const { buildRevisionFieldDiff } = require('../helpers/snapshotDiff');
 const { extractWikiLinks } = require('../helpers/predefinedSections');
+const { sanitizeRichText } = require('../helpers/sanitizeRichText');
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ function parseQaPairs(body, termName) {
   for (let i = 0; i < qArr.length; i++) {
     const q = (qArr[i] || '').trim();
     const a = (aArr[i] || '').trim();
-    if (q || a) pairs.push({ q, a });
+    if (q || a) pairs.push({ q, a: sanitizeRichText(a) });
   }
   if (pairs.length === 0) return null;
   const title = termName
@@ -180,7 +181,7 @@ router.post('/new', ensureAuthenticated, async (req, res) => {
     const term = await Term.create({
       name: name.trim(),
       slug: finalSlug,
-      leadDefinition: lead_definition || '',
+      leadDefinition: sanitizeRichText(lead_definition || ''),
       searchKeywords: keywords,
     });
 
@@ -269,7 +270,7 @@ router.post('/:id/edit', ensureAuthenticated, async (req, res) => {
     await term.update({
       name: name.trim(),
       slug: finalSlug,
-      leadDefinition: lead_definition || '',
+      leadDefinition: sanitizeRichText(lead_definition || ''),
       searchKeywords: keywords,
     });
 
@@ -394,7 +395,7 @@ router.post('/:id/revisions/:revId/restore', ensureAuthenticated, async (req, re
     await term.update({
       name: snap.name || term.name,
       slug: snap.slug || term.slug,
-      leadDefinition: snap.leadDefinition != null ? snap.leadDefinition : term.leadDefinition,
+      leadDefinition: snap.leadDefinition != null ? sanitizeRichText(snap.leadDefinition) : term.leadDefinition,
       searchKeywords: snap.searchKeywords || '',
     });
 
@@ -403,7 +404,7 @@ router.post('/:id/revisions/:revId/restore', ensureAuthenticated, async (req, re
       const s = snap.sections[i];
       await AccordionSection.create({
         title: s.title || 'Section',
-        body: s.body || '',
+        body: sanitizeRichText(s.body || ''),
         sortOrder: s.sortOrder != null ? s.sortOrder : i,
         termId: term.id,
       });
