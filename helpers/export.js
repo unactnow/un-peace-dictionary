@@ -1,11 +1,6 @@
-const fs = require('fs');
-const path = require('path');
 const { marked } = require('./markedConfig');
 
 const { sanitizeRichText } = require('./sanitizeRichText');
-
-const PD_CSS = fs.readFileSync(path.join(__dirname, 'static', 'peace-dictionary.css'), 'utf8');
-const PD_JS = fs.readFileSync(path.join(__dirname, 'static', 'peace-dictionary.js'), 'utf8');
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -301,9 +296,7 @@ function generateDictionaryHTML(terms, settings = {}) {
 
 <link href="https://cdn.jsdelivr.net/gh/unactnow/un-stylesheet@main/styles.css" rel="stylesheet">
 
-<style>
-${PD_CSS}
-</style>
+<link href="https://cdn.jsdelivr.net/gh/unactnow/un-peace-dictionary@main/helpers/static/peace-dictionary.css" rel="stylesheet">
 
 <div class="peace-dictionary" id="peace-dictionary">
 
@@ -359,9 +352,7 @@ ${sectionsHtml}
 
 </div>
 
-<script>
-${PD_JS}
-</script>
+<script src="https://cdn.jsdelivr.net/gh/unactnow/un-peace-dictionary@main/helpers/static/peace-dictionary.js" defer></script>
 `;
 }
 
